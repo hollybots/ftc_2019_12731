@@ -233,7 +233,10 @@ public class AutonomousOpModesBase extends OpModesBase  {
             this.DEBUG
         );
 
-        botCurrentPlacement = navigation.getPlacement();
+        realign();
+
+        telemetry.addData("Status", "Robot Initialized");
+        telemetry.update();
 
     }
 
@@ -258,10 +261,9 @@ public class AutonomousOpModesBase extends OpModesBase  {
         double demandedTheta;
         double theta;
 
+        realign();
 
-        botCurrentPlacement = realign();
-
-        // Keeping the robot oriented north, we are going to make it to our destination
+        // Keeping the robot oriented north, we are going to make it to our destination by travelling at angle
 
         dbugThis("** Entering gotoPlacement **");
         dbugThis(String.format("Current position X: %2.2f", botCurrentPlacement.x));
@@ -270,10 +272,11 @@ public class AutonomousOpModesBase extends OpModesBase  {
         dbugThis(String.format("Target position X: %2.2f", destination.x));
         dbugThis(String.format("Target position y: %2.2f", destination.y));
 
-
+        // pid for approaching position
         while ( opModeIsActive() && !isPositionWithinAcceptableTargetRange(botCurrentPlacement, destination) ) {
 
-            if ( !isStalled() ) {
+            // if robot gets stalled moving in the given direction, we have to try to release it
+            if ( isStalled() ) {
                 nudgeRobot();
             }
 
@@ -290,6 +293,9 @@ public class AutonomousOpModesBase extends OpModesBase  {
             botCurrentPlacement = navigation.getPlacement();
         }
         stopMoving();
+
+        telemetry.addData("Status", "Robot Initialized");
+        telemetry.update();
     }
 
 
@@ -307,8 +313,8 @@ public class AutonomousOpModesBase extends OpModesBase  {
 
         int tries = 0;
 
-        /* Check if we can "update" our positioning */
-        while ( tries++ < FIND_NAVIGATION_BEACON_MAX_RETRY  &&  opModeIsActive() && botCurrentPlacement == null) {
+        botCurrentPlacement = navigation.getPlacement();
+        while ( botCurrentPlacement == null && tries++ < FIND_NAVIGATION_BEACON_MAX_RETRY  &&  opModeIsActive() ) {
 
             // if we were not able to orient ourselves, we have to move a bit
             nudgeRobot();
@@ -427,7 +433,7 @@ public class AutonomousOpModesBase extends OpModesBase  {
      */
     protected void moveRightByTime(int ms)
     {
-        move(TravelDirection.RIGHT, ms);
+        move(TravelDirection.RIGHT, ms,false);
     }
 
     /**
@@ -437,7 +443,7 @@ public class AutonomousOpModesBase extends OpModesBase  {
      */
     protected void moveLeftByTime(int ms)
     {
-        move(TravelDirection.LEFT, ms);
+        move(TravelDirection.LEFT, ms,false);
     }
 
     /**
@@ -447,7 +453,7 @@ public class AutonomousOpModesBase extends OpModesBase  {
      */
     protected void moveBackwardByTime(int ms)
     {
-        move(TravelDirection.BACKWARD, ms);
+        move(TravelDirection.BACKWARD, ms,false);
     }
 
     /**
@@ -457,7 +463,7 @@ public class AutonomousOpModesBase extends OpModesBase  {
      */
     protected void moveForwardByTime(int ms)
     {
-        move(TravelDirection.FORWARD, ms);
+        move(TravelDirection.FORWARD, ms, false);
     }
 
     /**
@@ -469,9 +475,9 @@ public class AutonomousOpModesBase extends OpModesBase  {
      *
      * @param direction             : FORWARD,BACKWARD,LEFT,RIGHT
      * @param ms                    : Limit of time the motos will be in motion
-     * @param untilOriented         : The robot will move until oriented
+     * @param untilRealigned         : The robot will move until oriented
      */
-    private void move(TravelDirection direction, double ms, boolean untilOriented) {
+    private void move(TravelDirection direction, double ms, boolean untilRealigned) {
 
         double multiplierFL = 0;
         double multiplierFR = 0;
@@ -520,14 +526,13 @@ public class AutonomousOpModesBase extends OpModesBase  {
             !isHittingSomething(direction) &&
             !isStalled() &&
             runtime.milliseconds() < limit &&
-            (!untilOriented || untilOriented && botCurrentPlacement == null)
+            (!untilRealigned || untilRealigned && botCurrentPlacement == null)
         ) {
             idle();
         }
 
         stopMoving();
         botCurrentPlacement = navigation.getPlacement();
-        telemetry.update();
         return;
     }
 
@@ -744,9 +749,9 @@ public class AutonomousOpModesBase extends OpModesBase  {
     /**
      * nudgeRobot()
      *
-     * Move the robot in a random direction, to free the sensors
+     * Move the robot in a random direction, tying to free the sensors
      */
     public void nudgeRobot() {
-        move(randomEnum(TravelDirection.class), 800);
+        move(randomEnum(TravelDirection.class), 800, true);
     }
 }
