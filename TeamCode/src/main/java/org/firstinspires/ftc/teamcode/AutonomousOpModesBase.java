@@ -36,7 +36,9 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -52,21 +54,41 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 
 
 /**
- * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
- * the autonomous or the teleop period of an FTC match. The names of OpModes appear on the menu
- * of the FTC Driver Station. When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all linear OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
+ * This file contains the base class definition for all Autonomous OpModes.
  */
 
 @TeleOp(name="Basic: Autonomous with Navigation", group="Linear Opmode")
 @Disabled
-public class AutonomousOpModesBase extends OpModesBase  {
+public class AutonomousOpModesBase extends LinearOpMode implements AllOpModesUtilities {
+
+    // Will dump debug information in the LogCat if true
+    boolean DEBUG                             = false;
+
+
+    /**
+     * FIELD CONSTANT
+     */
+    static final double FIELD_WIDTH                                 = 48.0;
+    static final double FIELD_LENGTH                                = 96.0;
+
+    /**
+     * PROPULSION CONSTANTS
+     */
+    static final int TURN_DIRECTION_LEFT                = 1;  // this is a direction for
+    static final int TURN_DIRECTION_RIGHT               = -1;
+    static final int ERROR_POSITION_COUNT               = 10;
+
+    static final double DRIVE_SPEED                     = 0.9;
+    static final double TURNING_SPEED                   = 0.3;
+
+
+    static final double     HEADING_THRESHOLD       = 1.0 ;      // As tight as we can make it with an integer gyro
+    /***  IMPORTANT NOTE IF YOU DONT WANT TO GET STUCK in an infinite loop while turning:
+     P_TURN_COEFF * TURNING_SPEED must be > 0.1
+     ************************************************************************* */
+    static final double     P_TURN_COEFF            = 0.5;     // Larger is more responsive, but also less stable
+    static final double     P_DRIVE_COEFF           = 0.15;     // Larger is more responsive, but also less stable
+
 
     /**
      * NAVIGATION CONSTANTS
@@ -117,6 +139,10 @@ public class AutonomousOpModesBase extends OpModesBase  {
      * Class Objects
      */
 
+    /* Propulsion and basic hardware
+     */
+    protected BotBase   botBase;
+
     // We delegate navigation to this object
     protected SensorNavigation navigation;
 //    protected VuforiaNavigation navigation;
@@ -131,9 +157,15 @@ public class AutonomousOpModesBase extends OpModesBase  {
     /**
      * Class valiables for persistence
      */
+    // stall probability (0-5 5:stalled)
     int stallProbability                        = 0;
+    // Robot placement at all time in Field Coordinates [x:{-F/2, F/2} y: {-F/2,F/2}]
     FieldPlacement botCurrentPlacement          = null;
+    // Previous Robot placement in Field Coordinates [x:{-F/2, F/2} y: {-F/2,F/2}]
     FieldPlacement botPreviousPlacement         = null;
+
+    // Timekeeper OpMode members.
+    protected ElapsedTime runtime = new ElapsedTime();
 
 
     @Override
@@ -162,38 +194,42 @@ public class AutonomousOpModesBase extends OpModesBase  {
         // Enable navigation system
         navigation.activate();
 
+        FieldPlacement initialPosition = new FieldPlacement(0,0);
+
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
+            gotoPlacement(initialPosition);
             break;
         }
 
         // Disable navigation system
         navigation.stop();
+        stopMoving();
 
     }
 
 
     protected void initRobot() {
 
-        super.initRobot();
+        botBase.init(hardwareMap);
 
         /* DC MOtors with mecanum wheels, we are not using the encoders at all */
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        botBase.getFrontRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        botBase.getFrontRightDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        botBase.getFrontRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        botBase.getFrontLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        botBase.getFrontLeftDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        botBase.getFrontLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        rearRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rearRightDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rearRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        botBase.getRearRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        botBase.getRearRightDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        botBase.getRearRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        rearLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rearLeftDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rearLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        botBase.getRearLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        botBase.getRearLeftDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        botBase.getRearLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
 
         /*********************       GYRO        *********************** */
@@ -220,6 +256,8 @@ public class AutonomousOpModesBase extends OpModesBase  {
             NAVIGATION
          */
         navigation  = new SensorNavigation(
+            FIELD_WIDTH,
+            FIELD_LENGTH,
             hardwareMap,
             NB_FRONT_SENSORS,
             DISTANCE_FRONT_SENSORS,
@@ -353,10 +391,7 @@ public class AutonomousOpModesBase extends OpModesBase  {
      */
     protected void stopMoving() {
 
-        frontLeftDrive.setPower(0.0);
-        frontRightDrive.setPower(0.0);
-        rearLeftDrive.setPower(0.0);
-        rearRightDrive.setPower(0.0);
+        botBase.stop();
         return;
     }
 
@@ -418,10 +453,10 @@ public class AutonomousOpModesBase extends OpModesBase  {
             rear_right /= max;
         }
 
-        frontLeftDrive.setPower(front_left);
-        frontRightDrive.setPower(front_right);
-        rearLeftDrive.setPower(rear_left);
-        rearRightDrive.setPower(rear_right);
+        botBase.getFrontLeftDrive().setPower(front_left);
+        botBase.getFrontRightDrive().setPower(front_right);
+        botBase.getRearLeftDrive().setPower(rear_left);
+        botBase.getRearRightDrive().setPower(rear_right);
 
     }
 
@@ -514,10 +549,10 @@ public class AutonomousOpModesBase extends OpModesBase  {
 
         }
 
-        frontRightDrive.setPower(DRIVE_SPEED * multiplierFR);
-        rearRightDrive.setPower(DRIVE_SPEED * multiplierRR);
-        frontLeftDrive.setPower(DRIVE_SPEED * multiplierFL);
-        rearLeftDrive.setPower(DRIVE_SPEED * multiplierRL);
+        botBase.getFrontRightDrive().setPower(DRIVE_SPEED * multiplierFR);
+        botBase.getRearRightDrive().setPower(DRIVE_SPEED * multiplierRR);
+        botBase.getFrontLeftDrive().setPower(DRIVE_SPEED * multiplierFL);
+        botBase.getRearLeftDrive().setPower(DRIVE_SPEED * multiplierRL);
 
         double limit = runtime.milliseconds() + ms;
 
@@ -672,10 +707,10 @@ public class AutonomousOpModesBase extends OpModesBase  {
         }
 
         // Send desired speeds to motors.
-        frontLeftDrive.setPower(leftSpeed);
-        rearLeftDrive.setPower(leftSpeed);
-        frontRightDrive.setPower(rightSpeed);
-        rearRightDrive.setPower(rightSpeed);
+        botBase.getFrontLeftDrive().setPower(leftSpeed);
+        botBase.getRearLeftDrive().setPower(leftSpeed);
+        botBase.getFrontRightDrive().setPower(rightSpeed);
+        botBase.getRearRightDrive().setPower(rightSpeed);
 
         // Display it for the driver.
 //        dbugThis(String.format("Target: %5.2f", angle));
@@ -753,5 +788,26 @@ public class AutonomousOpModesBase extends OpModesBase  {
      */
     public void nudgeRobot() {
         move(randomEnum(TravelDirection.class), 800, true);
+    }
+
+
+    /**
+     * justWait()
+     *
+     * Just like that.  This function does nothing but wait while allowing to other processes to run
+     *
+     * @param ms       : any number of milliseconds.  Can be less than 1
+     *
+     */
+    protected void justWait(double ms) {
+
+        ms = Math.abs(ms);
+        double limit = runtime.milliseconds() + ms;
+
+        // keep looping while we are still active, and not on heading.
+        while (opModeIsActive() && runtime.milliseconds() < limit  ) {
+            idle();
+            telemetry.update();
+        }
     }
 }

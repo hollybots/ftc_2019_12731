@@ -36,85 +36,36 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@TeleOp(name="Test Mecanum Wheels", group="Iterative")
+@TeleOp(name="Test Mecanum", group="Tests")
 //@Disabled
-public class OpMode_MecanumWheelsPropulsionTest extends OpMode
+public class TestMecanumWheelsPropulsion extends TeleOpModesBase
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
-    private DcMotor frontLeftDrive = null;
-    private DcMotor frontRightDrive = null;
-    private DcMotor rearLeftDrive = null;
-    private DcMotor rearRightDrive = null;
 
-    static final double AUTONOMOUS_SPEED        = 0.6;
-
-    static final double     REV_COUNTS_PER_MOTOR_REV            = 1200;                // eg: REV Motor Encoder
-    static final double     PROPULSION_DRIVE_GEAR_REDUCTION     = 2.0;       // This is < 1.0 if geared UP
-    static final double     WHEEL_CIRCUMFERENCE                 = 4.0 * 3.14159;    // For figuring circumference
-    static final double     PROPULSION_COUNTS_PER_INCH          = (REV_COUNTS_PER_MOTOR_REV * PROPULSION_DRIVE_GEAR_REDUCTION) / WHEEL_CIRCUMFERENCE;
-    static final double     DISTANCE_TO_SAFEZONE                = 24.0;
-    static final double     TURN_DISTANCE                       = 1.5;
-
-    static final double     DRIVE_SPEED             = 0.6;
-    static final double     TURN_SPEED              = 0.5;
-
-    static final double     ACCEPTABLE_RANGE_INCHES     = 0.25;
-
+    static final double     AUTONOMOUS_SPEED            = 0.6;
     static final double     K                           = 0.2;
-
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-
+    private BotBase         botBase = null;
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
 
-        telemetry.addData("Status", "Initializing...");
+        telemetry.addData("Status", "Initializing the base...");
+
+        super.init();
 
         /* ************************************
             PROPULSION MOTORS
          */
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
-        frontLeftDrive  = hardwareMap.get(DcMotor.class, "front_left_drive");
-        frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
-        rearLeftDrive  = hardwareMap.get(DcMotor.class, "rear_left_drive");
-        rearRightDrive = hardwareMap.get(DcMotor.class, "rear_right_drive");
-
-
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
-        frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        rearLeftDrive.setDirection(DcMotor.Direction.REVERSE);
-        rearLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rearLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        rearRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        rearRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rearRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -209,15 +160,14 @@ public class OpMode_MecanumWheelsPropulsionTest extends OpMode
 
 
         // Send calculated power to wheels
-        frontLeftDrive.setPower(front_left);
-        frontRightDrive.setPower(front_right);
-        rearLeftDrive.setPower(rear_left);
-        rearRightDrive.setPower(rear_right);
+        botBase.getFrontLeftDrive().setPower(front_left);
+        botBase.getFrontRightDrive().setPower(front_right);
+        botBase.getRearLeftDrive().setPower(rear_left);
+        botBase.getRearRightDrive().setPower(rear_right);
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
         telemetry.addData("Motors", "front left (%.2f), front right (%.2f), rear left (%.2f), rear right (%.2f)", front_left, front_right, rear_left, rear_right);
-
 
         telemetry.update();
     }
@@ -227,6 +177,6 @@ public class OpMode_MecanumWheelsPropulsionTest extends OpMode
      */
     @Override
     public void stop() {
+        super.stop();
     }
-
 }

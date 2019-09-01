@@ -53,9 +53,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class SensorNavigation {
 
 
-    // Since sensor gives distance in cm, we must use cm for all the physical dimension.
-    // We will define some constants and conversions here
-    private static final float inchFTCFieldWidth      = (12 * 6);       // the width of the FTC field (from the center point to the outer panels)
+    private double inchFTCFieldWidth              = 0.0; // in inches
+    private double inchFTCFieldLength             = 0.0; // in inches
 
     private OpenGLMatrix lastLocation = null;
 
@@ -83,6 +82,8 @@ public class SensorNavigation {
      * @param debug: in debug mode : true
      */
     public SensorNavigation(HardwareMap hardwareMap,
+                            double fieldWidth,     // x axis : enclosure from the left to right (standing in the red alliance)
+                            double fieldLength,    // y axis : enclosure from the red alliance to the blue alliance
                             int nbFrontSensors,
                             double distanceFront,
                             int nbRearSensors,
@@ -107,6 +108,9 @@ public class SensorNavigation {
         rearDistanceSensors        = new ArrayList();
         leftDistanceSensors        = new ArrayList();
         rightDistanceSensors       = new ArrayList();
+
+        this.inchFTCFieldWidth          = fieldWidth/2.0;
+        this.inchFTCFieldLength         = fieldLength/2.0;
 
         /*********************************************
          * Configure Sensor Navigation
@@ -183,8 +187,8 @@ public class SensorNavigation {
          */
 
         /* Find the location of the center of the robot */
-        y1 = inchFTCFieldWidth - (front + distanceFront);
-        y2 = -inchFTCFieldWidth + (rear + distanceRear);
+        y1 = inchFTCFieldLength - (front + distanceFront);
+        y2 = -inchFTCFieldLength + (rear + distanceRear);
         x1 = inchFTCFieldWidth - (right + distanceRight);
         x2 = -inchFTCFieldWidth + (left + distanceLeft);
 
