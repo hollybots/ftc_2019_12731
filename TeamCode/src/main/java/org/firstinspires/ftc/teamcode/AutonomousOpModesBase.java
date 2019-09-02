@@ -30,11 +30,14 @@
 package org.firstinspires.ftc.teamcode;
 
 //import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
+import android.util.Log;
+
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
@@ -57,19 +60,18 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * This file contains the base class definition for all Autonomous OpModes.
  */
 
-@TeleOp(name="Basic: Autonomous with Navigation", group="Linear Opmode")
+@Autonomous(name="Autonomous Base Class", group="none")
 @Disabled
-public class AutonomousOpModesBase extends LinearOpMode implements AllOpModesUtilities {
+public class AutonomousOpModesBase extends LinearOpMode {
 
     // Will dump debug information in the LogCat if true
     boolean DEBUG                             = false;
 
-
     /**
      * FIELD CONSTANT
      */
-    static final double FIELD_WIDTH                                 = 48.0;
-    static final double FIELD_LENGTH                                = 96.0;
+    static final double FIELD_WIDTH                     = 48.0;
+    static final double FIELD_LENGTH                    = 96.0;
 
     /**
      * PROPULSION CONSTANTS
@@ -174,7 +176,7 @@ public class AutonomousOpModesBase extends LinearOpMode implements AllOpModesUti
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        initRobot();
+        initAutonomous();
 
         /*********************************************
          * WAIT FOR START
@@ -210,7 +212,7 @@ public class AutonomousOpModesBase extends LinearOpMode implements AllOpModesUti
     }
 
 
-    protected void initRobot() {
+    protected void initAutonomous() {
 
         botBase.init(hardwareMap);
 
@@ -808,6 +810,13 @@ public class AutonomousOpModesBase extends LinearOpMode implements AllOpModesUti
         while (opModeIsActive() && runtime.milliseconds() < limit  ) {
             idle();
             telemetry.update();
+        }
+    }
+
+    void dbugThis(String s) {
+
+        if ( DEBUG == true ) {
+            Log.d("OpModesBaseClass: ", s);
         }
     }
 }

@@ -29,18 +29,15 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@TeleOp(name="Test Mecanum", group="3")
+@TeleOp(name="TeleOp Main", group="1")
 //@Disabled
-public class TestMecanumWheelsPropulsion extends TeleOpModesBase
+public class TeleOpMode_12731 extends TeleOpModesBase
 {
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();

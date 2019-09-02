@@ -81,9 +81,9 @@ public class SensorNavigation {
      * @param telemetry
      * @param debug: in debug mode : true
      */
-    public SensorNavigation(HardwareMap hardwareMap,
-                            double fieldWidth,     // x axis : enclosure from the left to right (standing in the red alliance)
+    public SensorNavigation(double fieldWidth,     // x axis : enclosure from the left to right (standing in the red alliance)
                             double fieldLength,    // y axis : enclosure from the red alliance to the blue alliance
+                            HardwareMap hardwareMap,
                             int nbFrontSensors,
                             double distanceFront,
                             int nbRearSensors,

@@ -12,7 +12,7 @@ import java.io.FileInputStream;
  */
 public class PlaybackAuto extends OpMode {
 
-    @Autonomous(name="TeamCode.Auto.Playback.1", group="TeamCode")
+    @Autonomous(name="Playback #1", group="5")
     public static class PlaybackAuto1 extends PlaybackAuto {
         @Override
         public void init() {
@@ -21,7 +21,7 @@ public class PlaybackAuto extends OpMode {
         }
     }
 
-    @Autonomous(name="TeamCode.Auto.Playback.2", group="TeamCode")
+    @Autonomous(name="Playback #2", group="5")
     public static class PlaybackAuto2 extends PlaybackAuto {
         @Override
         public void init() {
@@ -30,7 +30,7 @@ public class PlaybackAuto extends OpMode {
         }
     }
 
-    @Autonomous(name="TeamCode.Auto.Playback.3", group="TeamCode")
+    @Autonomous(name="Playback #3", group="5")
     public static class PlaybackAuto3 extends PlaybackAuto {
         @Override
         public void init() {
@@ -39,7 +39,7 @@ public class PlaybackAuto extends OpMode {
         }
     }
 
-    @Autonomous(name="TeamCode.Auto.Playback.4", group="TeamCode")
+    @Autonomous(name="Playback #4", group="5")
     public static class PlaybackAuto4 extends PlaybackAuto {
         @Override
         public void init() {

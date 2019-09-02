@@ -12,3 +12,10 @@
 
 // Include common definitions from above.
 apply from: '../build.common.gradle'
+
+android {
+
+    defaultConfig {
+        targetSdkVersion 28
+    }
+}

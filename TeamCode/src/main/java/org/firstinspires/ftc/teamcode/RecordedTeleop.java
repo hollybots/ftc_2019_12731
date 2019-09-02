@@ -12,7 +12,7 @@ import java.io.FileOutputStream;
  */
 public class RecordedTeleop extends TeleOpModesBase {
 
-    @TeleOp(name="TeamCode.Teleop.Recorded.1", group="TeamCode")
+    @TeleOp(name="Recording #1", group="Recorder")
     public static class RecordedTeleop1 extends RecordedTeleop {
         @Override
         public void init() {
@@ -21,7 +21,7 @@ public class RecordedTeleop extends TeleOpModesBase {
         }
     }
 
-    @TeleOp(name="TeamCode.Teleop.Recorded.2", group="TeamCode")
+    @TeleOp(name="Recording #2", group="Recorder")
     public static class RecordedTeleop2 extends RecordedTeleop {
         @Override
         public void init() {
@@ -30,7 +30,7 @@ public class RecordedTeleop extends TeleOpModesBase {
         }
     }
 
-    @TeleOp(name="TeamCode.Teleop.Recorded.3", group="TeamCode")
+    @TeleOp(name="Recording #3", group="Recorder")
     public static class RecordedTeleop3 extends RecordedTeleop {
         @Override
         public void init() {
@@ -39,7 +39,7 @@ public class RecordedTeleop extends TeleOpModesBase {
         }
     }
 
-    @TeleOp(name="TeamCode.Teleop.Recorded.4", group="TeamCode")
+    @TeleOp(name="Recording #4", group="Recorder")
     public static class RecordedTeleop4 extends RecordedTeleop {
         @Override
         public void init() {

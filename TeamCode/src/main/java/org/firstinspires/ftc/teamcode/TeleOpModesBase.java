@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -9,11 +11,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 /**
  * Teleop mode.
  */
-@TeleOp(name="TeleOpModes Base", group="TeleOpModes")
+@TeleOp(name="TeleOp Base class", group="none")
 @Disabled
-public class TeleOpModesBase extends OpMode implements AllOpModesUtilities {
+public class TeleOpModesBase extends OpMode {
 
     private BotBase botBase;
+
+    protected boolean DEBUG = true;
 
     /**
      * Initializes the robot.
@@ -54,6 +58,13 @@ public class TeleOpModesBase extends OpMode implements AllOpModesUtilities {
     public void stop() {
 
         botBase.stop();
+    }
+
+    void dbugThis(String s) {
+
+        if ( DEBUG == true ) {
+            Log.d("OpModesBaseClass: ", s);
+        }
     }
 
 }
