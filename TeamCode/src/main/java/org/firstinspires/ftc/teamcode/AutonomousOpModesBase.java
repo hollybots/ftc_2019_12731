@@ -143,7 +143,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /* Propulsion and basic hardware
      */
-    protected BotBase   botBase;
+    protected BotBase botBase = new BotBase();
 
     // We delegate navigation to this object
     protected SensorNavigation navigation;
@@ -168,6 +168,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     // Timekeeper OpMode members.
     protected ElapsedTime runtime = new ElapsedTime();
+
 
 
     @Override

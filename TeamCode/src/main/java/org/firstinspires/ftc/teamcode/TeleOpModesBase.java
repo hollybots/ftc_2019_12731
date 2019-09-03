@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Teleop mode.
@@ -15,9 +16,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 @Disabled
 public class TeleOpModesBase extends OpMode {
 
-    private BotBase botBase;
-
+    protected BotBase botBase = new BotBase();
     protected boolean DEBUG = true;
+
+
+    // Timekeeper OpMode members.
+    protected ElapsedTime runtime = new ElapsedTime();
 
     /**
      * Initializes the robot.

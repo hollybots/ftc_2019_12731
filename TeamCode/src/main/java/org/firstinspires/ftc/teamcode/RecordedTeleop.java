@@ -10,7 +10,7 @@ import java.io.FileOutputStream;
  * Recorded teleop mode.
  * This mode records the hardware which can later be played back in autonomous.
  */
-public class RecordedTeleop extends TeleOpModesBase {
+public class RecordedTeleop extends TestMecanumWheelsPropulsion {
 
     @TeleOp(name="Recording #1", group="Recorder")
     public static class RecordedTeleop1 extends RecordedTeleop {

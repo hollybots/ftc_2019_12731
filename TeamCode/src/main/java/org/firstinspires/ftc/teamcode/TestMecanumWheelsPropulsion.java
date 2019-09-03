@@ -42,14 +42,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 //@Disabled
 public class TestMecanumWheelsPropulsion extends TeleOpModesBase
 {
-    // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-
     static final double     AUTONOMOUS_SPEED            = 0.6;
     static final double     K                           = 0.2;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    private BotBase         botBase = null;
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -57,15 +53,7 @@ public class TestMecanumWheelsPropulsion extends TeleOpModesBase
     public void init() {
 
         telemetry.addData("Status", "Initializing the base...");
-
         super.init();
-
-        /* ************************************
-            PROPULSION MOTORS
-         */
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
