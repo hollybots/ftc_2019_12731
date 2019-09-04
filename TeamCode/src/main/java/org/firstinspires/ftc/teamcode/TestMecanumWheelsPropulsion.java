@@ -54,9 +54,11 @@ public class TestMecanumWheelsPropulsion extends TeleOpModesBase
 
         telemetry.addData("Status", "Initializing the base...");
         super.init();
+        telemetry.update();
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
+        telemetry.update();
     }
 
 
@@ -68,7 +70,6 @@ public class TestMecanumWheelsPropulsion extends TeleOpModesBase
     public void init_loop() {
 
         telemetry.addData("Status", "Make sure motors are free to move");
-        // Send telemetry message to indicate successful Encoder reset
         telemetry.update();
     }
 
@@ -88,9 +89,6 @@ public class TestMecanumWheelsPropulsion extends TeleOpModesBase
      */
     @Override
     public void loop() {
-
-        telemetry.addData("Autonomous Mode", "Off");
-
         /*
         Read gamepad value
          */

@@ -10,7 +10,7 @@ import java.io.FileInputStream;
  * Playback autonomous mode.
  * This mode playbacks the recorded values previously recorded in teleop.
  */
-public class PlaybackAuto extends OpMode {
+public class PlaybackAuto extends TestMecanumWheelsPropulsion {
 
     @Autonomous(name="Playback #1", group="5")
     public static class PlaybackAuto1 extends PlaybackAuto {
@@ -52,6 +52,7 @@ public class PlaybackAuto extends OpMode {
      * Creates the playback.
      */
     public void init() {
+        super.init();
         startTime = -1;
         try {
             inputStream = hardwareMap.appContext.openFileInput(filename);
