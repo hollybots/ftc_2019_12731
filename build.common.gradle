@@ -38,8 +38,7 @@ android {
 
     defaultConfig {
         applicationId 'com.qualcomm.ftcrobotcontroller'
-        minSdkVersion 19
-        targetSdkVersion 26
+        minSdkVersion 25
 
         /**
          * We keep the versionCode and versionName of robot controller applications in sync with
@@ -77,7 +76,7 @@ android {
             // Disable debugging for release versions so it can be uploaded to Google Play.
             //debuggable true
             ndk {
-                abiFilters "armeabi-v7a"
+                abiFilters "armeabi-v7a", "arm64-v8a"
             }
         }
         debug {
@@ -85,7 +84,7 @@ android {
             jniDebuggable true
             renderscriptDebuggable true
             ndk {
-                abiFilters "armeabi-v7a"
+                abiFilters "armeabi-v7a", "arm64-v8a"
             }
         }
     }
@@ -103,7 +102,9 @@ android {
 
 repositories {
     flatDir {
-        dirs rootProject.file('libs')
+        dirs rootProject.file('libs'),
+             rootProject.file('libs/opencv-native/3rdparty/libs/armeabi-v7a'),
+             rootProject.file('libs/opencv-native/libs/armeabi-v7a')
     }
 }
 apply from: 'build.release.gradle'
