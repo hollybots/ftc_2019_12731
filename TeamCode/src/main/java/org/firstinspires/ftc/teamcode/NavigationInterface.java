@@ -11,4 +11,6 @@ public interface NavigationInterface {
 
     //***//
     public FieldPlacement getSkyStone(String skyStoneTargetName);
+
+    public boolean isActive();
 }

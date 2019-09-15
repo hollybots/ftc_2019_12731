@@ -49,7 +49,7 @@ public class BotSounds
         if (soundPlaying) {
             return;
         }
-        
+
         int     soundID         = -1;
 
         // Determine Resource IDs for the sounds you want to play, and make sure it's valid.

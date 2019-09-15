@@ -56,9 +56,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 
 public class SensorNavigation implements NavigationInterface{
 
-
-
-
     private double inchFTCFieldWidth              = 0.0; // in inches
     private double inchFTCFieldLength             = 0.0; // in inches
 
@@ -211,7 +208,9 @@ public class SensorNavigation implements NavigationInterface{
         return null;
     }
 
-
+    public boolean isActive() {
+        return true;
+    }
 
     public NavigationTypesEnum getType() {
         return (NavigationTypesEnum.SENSORS);

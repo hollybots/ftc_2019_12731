@@ -64,7 +64,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  */
 
 @Autonomous(name="Autonomous Base Class", group="none")
-@Disabled
+//@Disabled
 public class AutonomousOpModesBase extends LinearOpMode {
 
     protected static final double CLOSE_ENOUGH_X                = 1.0;
@@ -130,9 +130,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected static final double DISTANCE_LEFT_SENSORS         = -8;
     protected static final double DISTANCE_RIGHT_SENSORS        = 8;
 
-    protected static final String NAVIGATION_SYSTEM             = "SENSOR_NAVIGATION";
-
-
     // Every 2 seconds we check if the delta position in either direction has changed by this amount
     protected static final double DELTA_CHECK_IF_STALLED_X      = 2.0;
     protected static final double DELTA_CHECK_IF_STALLED_Y      = 2.0;
@@ -186,45 +183,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     @Override
-    public void runOpMode() {
-
-        telemetry.addData("Status", "Initialized");
-        telemetry.update();
-
-        initAutonomous();
-
-        /*********************************************
-         * WAIT FOR START
-         * *******************************************/
-
-        waitForStart();
-        runtime.reset();
-
-        telemetry.addData("Status", "Started!");
-        telemetry.update();
-
-
-        /*********************************************
-         * GAME IS ON !!
-         * *******************************************/
-
-        // Enable navigation system
-        navigation.activate();
-
-        FieldPlacement initialPosition = new FieldPlacement(0,0);
-
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
-
-            gotoPlacement(initialPosition);
-            break;
-        }
-
-        // Disable navigation system
-        navigation.stop();
-        stopMoving();
-
-    }
+    public void runOpMode() {}
 
 
     protected void initAutonomous() {
@@ -295,9 +254,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
             SERVO
          */
         camera_pan = hardwareMap.get(Servo.class, "camera_pan");
-
-        realign();
-
         telemetry.addData("Status", "Robot Initialized");
         telemetry.update();
 
@@ -372,7 +328,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     /**
      * realign()
      */
-    private void realign() {
+    protected void realign() {
 
         int tries = 0;
 
@@ -586,10 +542,14 @@ public class AutonomousOpModesBase extends LinearOpMode {
             !isHittingSomething(direction) &&
             !isStalled() &&
             runtime.milliseconds() < limit &&
-            (!untilRealigned || untilRealigned && botCurrentPlacement == null)
+            (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
             idle();
         }
+
+        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
+        dbugThis(String.format("isStalled : %b", isStalled()));
+        dbugThis(String.format("untilRealigned : %b", untilRealigned));
 
         stopMoving();
         botCurrentPlacement = navigation.getPlacement();
@@ -599,14 +559,26 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      *
-     * @param increment 0 to 10
      * @return
      */
-     public void moveCamera(int increment) {
-         if ( camera_pan != null ) {
-             double position = camera_pan.getPosition();
-             camera_pan.setPosition(position + 0.2);
+     public void moveCamera() {
+         if ( camera_pan == null ) {
+             return;
          }
+
+         double position = camera_pan.getPosition();
+
+         // pan right
+         if (position == 0.0 || position > 0.5) {
+             position = Math.min(position + 0.2, 1);
+         }
+
+         // pan left
+         else if (position == 1.0 || position < 0.5 ) {
+             position = Math.max(position - 0.2, 0);
+         }
+
+         camera_pan.setPosition(position);
      }
 
 
@@ -621,7 +593,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @return true|false
      */
-    private boolean isStalled()
+    protected boolean isStalled()
     {
 
         // check every 2s if position has changed significantly (current-previous > 1in.).  If it did, raise a flag
@@ -637,6 +609,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
         }
 
         if ( stallProbability > ATTEMPTS_BEFORE_STALL_DETECTED ) {
+
+
             return true;
         }
 
@@ -802,7 +776,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     public void nudgeRobot() {
 
         if (navigation.getType() == NavigationTypesEnum.VUFORIA) {
-            moveCamera(2);
+            moveCamera();
         }
 
         else if (navigation.getType() == NavigationTypesEnum.SENSORS) {
@@ -851,7 +825,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         double distance = 0.0;
         switch (direction) {
             case FORWARD:
-                if ( distanceRight != null && Math.max(distance, distanceRight.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
+                if ( distanceFront != null && Math.max(distance, distanceFront.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
                     return true;
                 }
                 break;

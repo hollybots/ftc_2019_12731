@@ -91,6 +91,9 @@ public class VuforiaNavigation implements NavigationInterface {
     private Telemetry telemetry;
     private boolean DEBUG   = false;
 
+    // active state
+    private boolean active   = false;
+
 
 
     /**
@@ -281,11 +284,13 @@ public class VuforiaNavigation implements NavigationInterface {
     public void activate() {
 
         targetsSkyStone.activate();
+        active = true;
     }
 
     public void stop() {
 
         targetsSkyStone.deactivate();
+        active = false;
     }
 
 
@@ -396,6 +401,11 @@ public class VuforiaNavigation implements NavigationInterface {
         }
 
         return placement;
+    }
+
+
+    public boolean isActive() {
+        return active;
     }
 
 
