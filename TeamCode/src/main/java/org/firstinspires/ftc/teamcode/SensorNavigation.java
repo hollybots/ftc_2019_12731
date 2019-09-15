@@ -50,7 +50,9 @@ import java.util.List;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
-public class SensorNavigation {
+public class SensorNavigation implements NavigationInterface{
+
+
 
 
     private double inchFTCFieldWidth              = 0.0; // in inches
@@ -115,17 +117,17 @@ public class SensorNavigation {
         /*********************************************
          * Configure Sensor Navigation
          */
-        for (int i=0; i<nbFrontSensors; i++) {
-            frontDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_distance" + i));
+        for (int i=1; i<=nbFrontSensors; i++) {
+            frontDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_" + i));
         }
-        for (int i=0; i<nbRearSensors; i++) {
-            rearDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_distance" + i));
+        for (int i=1; i<=nbRearSensors; i++) {
+            rearDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_" + i));
         }
-        for (int i=0; i<nbLeftSensors; i++) {
-            leftDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_distance" + i));
+        for (int i=1; i<=nbLeftSensors; i++) {
+            leftDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range" + i));
         }
-        for (int i=0; i<nbRightSensors; i++) {
-            rightDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_distance" + i));
+        for (int i=1; i<=nbRightSensors; i++) {
+            rightDistanceSensors.add(hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range" + i));
         }
     }
 
@@ -201,11 +203,18 @@ public class SensorNavigation {
     }
 
 
+    public NavigationTypesEnum getType() {
+        return (NavigationTypesEnum.SENSORS);
+    }
+
+
     private void dbugThis(String s) {
 
         if ( this.DEBUG == true ) {
             Log.d("SENSOR NAVIGATION:", s);
         }
     }
+
+
 
 }

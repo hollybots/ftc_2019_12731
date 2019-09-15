@@ -39,10 +39,12 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -50,6 +52,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 
+import java.util.List;
 import java.util.Random;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
@@ -63,6 +66,9 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 @Autonomous(name="Autonomous Base Class", group="none")
 @Disabled
 public class AutonomousOpModesBase extends LinearOpMode {
+
+    protected static final double CLOSE_ENOUGH_X                = 1.0;
+    protected static final double CLOSE_ENOUGH_Y                = 1.0;
 
     // Will dump debug information in the LogCat if true
     boolean DEBUG                             = false;
@@ -125,9 +131,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     protected static final String NAVIGATION_SYSTEM             = "SENSOR_NAVIGATION";
 
-    protected static final double CLOSE_ENOUGH_X                = 1.0;
-    protected static final double CLOSE_ENOUGH_Y                = 1.0;
-
 
     // Every 2 seconds we check if the delta position in either direction has changed by this amount
     protected static final double DELTA_CHECK_IF_STALLED_X      = 2.0;
@@ -146,8 +149,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected BotBase botBase = new BotBase();
 
     // We delegate navigation to this object
-    protected SensorNavigation navigation;
-//    protected VuforiaNavigation navigation;
+    protected NavigationInterface navigation;
 
     /**
      * Hardware classes
@@ -155,6 +157,12 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     // integrated IMU
     protected BNO055IMU gyro = null;
+
+    // Range Sensors
+    ModernRoboticsI2cRangeSensor distanceFront = null;
+    ModernRoboticsI2cRangeSensor distanceBack = null;
+    ModernRoboticsI2cRangeSensor distanceLeft = null;
+    ModernRoboticsI2cRangeSensor distanceRight = null;
 
     /**
      * Class valiables for persistence
@@ -258,21 +266,21 @@ public class AutonomousOpModesBase extends LinearOpMode {
         /* ************************************
             NAVIGATION
          */
-        navigation  = new SensorNavigation(
-            FIELD_WIDTH,
-            FIELD_LENGTH,
+        navigation  = new VuforiaNavigation(
             hardwareMap,
-            NB_FRONT_SENSORS,
-            DISTANCE_FRONT_SENSORS,
-            NB_REAR_SENSORS,
-            DISTANCE_REAR_SENSORS,
-            NB_LEFT_SENSORS,
-            DISTANCE_LEFT_SENSORS,
-            NB_RIGHT_SENSORS,
-            DISTANCE_RIGHT_SENSORS,
             telemetry,
+            VUFORIA_KEY,
+            CAMERA_CHOICE,
+            CAMERA_FORWARD_DISPLACEMENT,
+            CAMERA_VERTICAL_DISPLACEMENT,
+            CAMERA_LEFT_DISPLACEMENT,
             this.DEBUG
         );
+
+        /* ***********************************
+            RANGE SENSORS
+         */
+        distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
 
         realign();
 
@@ -576,6 +584,16 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
+     *
+     * @param increment 0 to 10
+     * @return
+     */
+     public void moveCamera(int increment) {
+
+     }
+
+
+    /**
      * isStalled()
      *
      * This method determine if the robot is stalled by checking every 2 seconds if is has moved significantly.  It uses
@@ -644,32 +662,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
 
-    private boolean isHittingSomething(TravelDirection direction) {
 
-        switch (direction) {
-            case FORWARD:
-                if (navigation.getDistanceFromSensors(SensorLocations.FRONT) <= CLOSE_ENOUGH_Y) {
-                    return true;
-                }
-                break;
-            case BACKWARD:
-                if (navigation.getDistanceFromSensors(SensorLocations.REAR) <= CLOSE_ENOUGH_Y) {
-                    return true;
-                }
-                break;
-            case LEFT:
-                if (navigation.getDistanceFromSensors(SensorLocations.LEFT) <= CLOSE_ENOUGH_X) {
-                    return true;
-                }
-                break;
-            case RIGHT:
-                if (navigation.getDistanceFromSensors(SensorLocations.RIGHT) <= CLOSE_ENOUGH_X) {
-                    return true;
-                }
-                break;
-        }
-        return false;
-    }
 
 
 
@@ -787,10 +780,17 @@ public class AutonomousOpModesBase extends LinearOpMode {
     /**
      * nudgeRobot()
      *
-     * Move the robot in a random direction, tying to free the sensors
+     * Move the robot or the camera, tying to find a beacon
      */
     public void nudgeRobot() {
-        move(randomEnum(TravelDirection.class), 800, true);
+
+        if (navigation.getType() == NavigationTypesEnum.VUFORIA) {
+            moveCamera(2);
+        }
+
+        else if (navigation.getType() == NavigationTypesEnum.SENSORS) {
+            move(randomEnum(TravelDirection.class), 800, true);
+        }
     }
 
 
@@ -819,5 +819,41 @@ public class AutonomousOpModesBase extends LinearOpMode {
         if ( DEBUG == true ) {
             Log.d("OpModesBaseClass: ", s);
         }
+    }
+
+    /**
+     * isHittingSomething()
+     *
+     * Given a direction, it will return true if the robot is too close
+     *
+     * @param direction
+     * @return
+     */
+    public boolean isHittingSomething(TravelDirection direction) {
+
+        double distance = 0.0;
+        switch (direction) {
+            case FORWARD:
+                if ( distanceRight != null && Math.max(distance, distanceRight.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
+                    return true;
+                }
+                break;
+            case BACKWARD:
+                if ( distanceBack != null && Math.max(distance, distanceBack.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
+                    return true;
+                }
+                break;
+            case LEFT:
+                if ( distanceLeft != null && Math.max(distance, distanceLeft.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
+                    return true;
+                }
+                break;
+            case RIGHT:
+                if ( distanceRight != null && Math.max(distance, distanceRight.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
+                    return true;
+                }
+                break;
+        }
+        return false;
     }
 }

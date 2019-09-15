@@ -17,6 +17,41 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     @Override
     public void runOpMode() {
-        super.runOpMode();
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        initAutonomous();
+
+        /*********************************************
+         * WAIT FOR START
+         * *******************************************/
+
+        waitForStart();
+        runtime.reset();
+
+        telemetry.addData("Status", "Started!");
+        telemetry.update();
+
+
+        /*********************************************
+         * GAME IS ON !!
+         * *******************************************/
+
+        // Enable navigation system
+        navigation.activate();
+
+        FieldPlacement initialPosition = new FieldPlacement(0,0);
+
+        // run until the end of the match (driver presses STOP)
+        while (opModeIsActive()) {
+
+            gotoPlacement(initialPosition);
+            break;
+        }
+
+        // Disable navigation system
+        navigation.stop();
+        stopMoving();
     }
 }
