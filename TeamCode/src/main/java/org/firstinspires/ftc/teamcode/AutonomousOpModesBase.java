@@ -40,11 +40,11 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -112,7 +112,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.
     // Valid choices are:  BACK or FRONT
-    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE     = BACK;
+    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = BACK;
+    protected static final boolean PHONE_IS_IN_PORTRAIT                         = false;
 
     protected static final int FIND_NAVIGATION_BEACON_MAX_RETRY              = 10;
 
@@ -151,6 +152,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     // We delegate navigation to this object
     protected NavigationInterface navigation;
 
+
     /**
      * Hardware classes
      */
@@ -163,6 +165,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
     ModernRoboticsI2cRangeSensor distanceBack = null;
     ModernRoboticsI2cRangeSensor distanceLeft = null;
     ModernRoboticsI2cRangeSensor distanceRight = null;
+
+
+    // navigation servo
+    Servo camera_pan = null;
 
     /**
      * Class valiables for persistence
@@ -274,6 +280,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             CAMERA_FORWARD_DISPLACEMENT,
             CAMERA_VERTICAL_DISPLACEMENT,
             CAMERA_LEFT_DISPLACEMENT,
+            PHONE_IS_IN_PORTRAIT,
             this.DEBUG
         );
 
@@ -281,6 +288,13 @@ public class AutonomousOpModesBase extends LinearOpMode {
             RANGE SENSORS
          */
         distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
+        distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
+
+
+        /* **********************************
+            SERVO
+         */
+        camera_pan = hardwareMap.get(Servo.class, "camera_pan");
 
         realign();
 
@@ -589,7 +603,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * @return
      */
      public void moveCamera(int increment) {
-
+         if ( camera_pan != null ) {
+             double position = camera_pan.getPosition();
+             camera_pan.setPosition(position + 0.2);
+         }
      }
 
 

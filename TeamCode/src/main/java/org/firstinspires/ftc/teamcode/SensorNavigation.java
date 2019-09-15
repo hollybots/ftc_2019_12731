@@ -49,6 +49,10 @@ import java.util.List;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
+import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
+
 
 public class SensorNavigation implements NavigationInterface{
 
@@ -201,6 +205,12 @@ public class SensorNavigation implements NavigationInterface{
 
         return  new FieldPlacement((x1 + x2) / 2.0, (y1 + y2) / 2.0);
     }
+
+
+    public FieldPlacement getSkyStone(String skyStoneTargetName) {
+        return null;
+    }
+
 
 
     public NavigationTypesEnum getType() {

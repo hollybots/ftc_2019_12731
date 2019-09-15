@@ -8,4 +8,7 @@ public interface NavigationInterface {
     public void stop();
     public FieldPlacement getPlacement();
     public NavigationTypesEnum getType();
+
+    //***//
+    public FieldPlacement getSkyStone(String skyStoneTargetName);
 }

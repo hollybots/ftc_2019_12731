@@ -30,23 +30,47 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import com.qualcomm.ftccommon.SoundPlayer;
+
+import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
 /**
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
-@TeleOp(name="TeleOp Main", group="1")
+@TeleOp(name="Test Mecanum & Vuforia", group="3")
 //@Disabled
-public class TeleOpMode_12731 extends TeleOpModesBase
+public class TestVuforiaWithMecanumWheels extends TeleOpModesBase
 {
-    // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-
     static final double     AUTONOMOUS_SPEED            = 0.6;
     static final double     K                           = 0.2;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    private BotBase         botBase = null;
+
+    // VuForia Key, register online
+    protected static final String VUFORIA_KEY = "AXINfYT/////AAAAGfcLttUpcU8GheQqMMZAtnFDz/qRJOlHnxEna51521+PFcmEWc02gUQ1s4DchmXk+fFvt+afRNF+2UoUgoAyQNtfVjRNS0u4f5o4kka/jERVEtKlJ27pO4euCEjE1DQ+l8ecADKTd1aWu641OheSf/RqDJ7BSvDct/PYRfRLfShAfBUxaFT3+Ud+6EL31VTmZKiylukvCnHaaQZxDmB2cCDdYFeK2CDwNIWoMx2VvweehNARttNvSR3cp4AepbtWnadsEnDQaStDv8jN09iE7CRWmMY8rrP8ba/O/eVlz0vzU7Fhtf2jXpSvCJn0qDw+1UK/bHsD/vslhdp+CBNcW7bT3gNHgTOrnIcldX2YhgZS";
+
+    // Vuforia translation from the the robot center where x -> front, y -> left and  z -> up
+    protected static final int CAMERA_FORWARD_DISPLACEMENT        = 150;   // eg: Camera is 150 mm in front of robot center
+    protected static final int CAMERA_VERTICAL_DISPLACEMENT       = 110;   // eg: Camera is 110 mm above ground
+    protected static final int CAMERA_LEFT_DISPLACEMENT           = 40;     // eg: Camera is 40 mm to the left of center line
+
+    // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.
+    // Valid choices are:  BACK or FRONT
+    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = BACK;
+    protected static final boolean PHONE_IS_IN_PORTRAIT                         = false;
+
+    // We delegate navigation to this object
+    protected NavigationInterface navigation;
+
+
+    // Robot placement at all time in Field Coordinates [x:{-F/2, F/2} y: {-F/2,F/2}]
+    FieldPlacement botCurrentPlacement          = null;
+
+    // Sounds
+    BotSounds botSounds = null;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -54,23 +78,45 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     public void init() {
 
         telemetry.addData("Status", "Initializing the base...");
-        telemetry.update();
-
         super.init();
-
-        /* ************************************
-            PROPULSION MOTORS
-         */
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-
+        telemetry.update();
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+
+        // Tell the driver that initialization is complete.
+        telemetry.addData("Status", "Initializing Vuforia");
+        telemetry.update();
+
+        /* ************************************
+            NAVIGATION
+        */
+        navigation  = new VuforiaNavigation(
+                hardwareMap,
+                telemetry,
+                VUFORIA_KEY,
+                CAMERA_CHOICE,
+                CAMERA_FORWARD_DISPLACEMENT,
+                CAMERA_VERTICAL_DISPLACEMENT,
+                CAMERA_LEFT_DISPLACEMENT,
+                PHONE_IS_IN_PORTRAIT,
+                this.DEBUG
+        );
+
+        // Tell the driver that initialization is complete.
+        // Tell the driver that initialization is complete.
+        telemetry.addData("Status", "Initialized");
+        telemetry.update();
+
+        telemetry.addData("Status", "Make sure motors are free to move");
+        telemetry.update();
+
+        /**
+         * SOUNDS
+         */
+        botSounds = new BotSounds(hardwareMap);
     }
-
-
 
     /*
      * Code to run REPEATEDLY after the driver hits INIT, but before they hit PLAY
@@ -78,9 +124,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void init_loop() {
 
-        telemetry.addData("Status", "Make sure motors are free to move");
-        // Send telemetry message to indicate successful Encoder reset
-        telemetry.update();
+
     }
 
     /*
@@ -89,10 +133,11 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void start() {
 
+        botSounds.play("ss_r2d2_up");
+
+        navigation.activate();
         runtime.reset();
     }
-
-
 
     /*
      * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
@@ -100,7 +145,32 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void loop() {
 
-        telemetry.addData("Autonomous Mode", "Off");
+
+        botCurrentPlacement = navigation.getPlacement();
+        if (botCurrentPlacement != null) {
+            telemetry.addData("Navigation:", "Pos: (%.1f, %.1f) - Heading : %.1f rad.",
+                    botCurrentPlacement.x,
+                    botCurrentPlacement.y,
+                    botCurrentPlacement.orientation);
+        }
+        else {
+            telemetry.addData("No Targets:", "");
+        }
+
+
+        FieldPlacement stoneRelativeplacement = navigation.getSkyStone("Front Perimeter 1");
+        if (stoneRelativeplacement != null ) {
+            botSounds.play("ss_roger_roger");
+            telemetry.addData("Stone:", "Travel: (%.1f, %.1f) - Heading : %.1f rad.",
+                    stoneRelativeplacement.x,
+                    stoneRelativeplacement.y,
+                    stoneRelativeplacement.orientation);
+        }
+        else {
+            telemetry.addData("No Stone:", "");
+        }
+
+        telemetry.update();
 
         /*
         Read gamepad value
@@ -165,10 +235,10 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         botBase.getRearRightDrive().setPower(rear_right);
 
         // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Motors", "front left (%.2f), front right (%.2f), rear left (%.2f), rear right (%.2f)", front_left, front_right, rear_left, rear_right);
-
-        telemetry.update();
+//        telemetry.addData("Status", "Run Time: " + runtime.toString());
+//        telemetry.addData("Motors", "front left (%.2f), front right (%.2f), rear left (%.2f), rear right (%.2f)", front_left, front_right, rear_left, rear_right);
+//
+//        telemetry.update();
     }
 
     /*
@@ -177,5 +247,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void stop() {
         super.stop();
+        navigation.activate();
     }
 }
