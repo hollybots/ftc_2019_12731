@@ -158,7 +158,7 @@ public class TestVuforiaWithMecanumWheels extends TeleOpModesBase
         }
 
 
-        FieldPlacement stoneRelativeplacement = navigation.getSkyStone("Front Perimeter 1");
+        FieldPlacement stoneRelativeplacement = navigation.getSkyStone("Stone Target");
         if (stoneRelativeplacement != null ) {
             botSounds.play("ss_roger_roger");
             telemetry.addData("Stone:", "Travel: (%.1f, %.1f) - Heading : %.1f rad.",

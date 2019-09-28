@@ -39,6 +39,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -86,7 +87,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     static final int TURN_DIRECTION_RIGHT               = -1;
     static final int ERROR_POSITION_COUNT               = 10;
 
-    static final double DRIVE_SPEED                     = 0.9;
+    static final double DRIVE_SPEED                     = 0.8;
     static final double TURNING_SPEED                   = 0.3;
 
 
@@ -105,10 +106,23 @@ public class AutonomousOpModesBase extends LinearOpMode {
     // VuForia Key, register online
     protected static final String VUFORIA_KEY = "AXINfYT/////AAAAGfcLttUpcU8GheQqMMZAtnFDz/qRJOlHnxEna51521+PFcmEWc02gUQ1s4DchmXk+fFvt+afRNF+2UoUgoAyQNtfVjRNS0u4f5o4kka/jERVEtKlJ27pO4euCEjE1DQ+l8ecADKTd1aWu641OheSf/RqDJ7BSvDct/PYRfRLfShAfBUxaFT3+Ud+6EL31VTmZKiylukvCnHaaQZxDmB2cCDdYFeK2CDwNIWoMx2VvweehNARttNvSR3cp4AepbtWnadsEnDQaStDv8jN09iE7CRWmMY8rrP8ba/O/eVlz0vzU7Fhtf2jXpSvCJn0qDw+1UK/bHsD/vslhdp+CBNcW7bT3gNHgTOrnIcldX2YhgZS";
 
+
+    // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
+    // We will define some constants and conversions here
+    private static final float mmPerInch        = 25.4f;
+
+
     // Vuforia translation from the the robot center where x -> front, y -> left and  z -> up
-    protected static final int CAMERA_FORWARD_DISPLACEMENT        = 150;   // eg: Camera is 150 mm in front of robot center
-    protected static final int CAMERA_VERTICAL_DISPLACEMENT       = 110;   // eg: Camera is 110 mm above ground
-    protected static final int CAMERA_LEFT_DISPLACEMENT           = 40;     // eg: Camera is 40 mm to the left of center line
+
+    final float CAMERA_FORWARD_DISPLACEMENT  = 8.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
+    final float CAMERA_VERTICAL_DISPLACEMENT = 9.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
+    final float CAMERA_LEFT_DISPLACEMENT     = 4.0f * mmPerInch;    // eg: Camera is ON the left side
+
+
+//
+//    protected static final int CAMERA_FORWARD_DISPLACEMENT        = 150;   // eg: Camera is 150 mm in front of robot center
+//    protected static final int CAMERA_VERTICAL_DISPLACEMENT       = 110;   // eg: Camera is 110 mm above ground
+//    protected static final int CAMERA_LEFT_DISPLACEMENT           = 40;     // eg: Camera is 40 mm to the left of center line
 
     // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.
     // Valid choices are:  BACK or FRONT
@@ -165,7 +179,14 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     // navigation servo
-    Servo camera_pan = null;
+    Servo camera_pan_horizontal = null;
+    double cameraPanHorizontalPosition        = 0;
+    int cameraPanHorizontalDirection          = 1; // 1: clockwise -1: counterclockwise
+
+    // navigation servo
+    Servo camera_pan_vertical = null;
+    double cameraPanVerticalPosition        = 0;
+    int cameraPanVerticalDirection          = 1; // 1: up -1: down
 
     /**
      * Class valiables for persistence
@@ -237,8 +258,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
             VUFORIA_KEY,
             CAMERA_CHOICE,
             CAMERA_FORWARD_DISPLACEMENT,
-            CAMERA_VERTICAL_DISPLACEMENT,
             CAMERA_LEFT_DISPLACEMENT,
+            CAMERA_VERTICAL_DISPLACEMENT,
             PHONE_IS_IN_PORTRAIT,
             this.DEBUG
         );
@@ -248,12 +269,17 @@ public class AutonomousOpModesBase extends LinearOpMode {
          */
         distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
         distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
+        distanceLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range_1");
 
 
         /* **********************************
             SERVO
          */
-        camera_pan = hardwareMap.get(Servo.class, "camera_pan");
+        camera_pan_horizontal = hardwareMap.get(Servo.class, "camera_pan_horizontal");
+        camera_pan_vertical = hardwareMap.get(Servo.class, "camera_pan_vertical");
+        setCameraVerticalPosition(0.5);
+        setCameraHorizontalPosition(0.5);
+
         telemetry.addData("Status", "Robot Initialized");
         telemetry.update();
 
@@ -308,7 +334,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             dbugThis(String.format("Translation X: %2.2f",translation_x));
             dbugThis(String.format("Diagonal Displacement: %2.2f", demandedTheta));
 
-            moveAtAngle(theta);
+            moveAtAngle(theta, DRIVE_SPEED);
             botCurrentPlacement = navigation.getPlacement();
         }
         stopMoving();
@@ -407,14 +433,14 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @param angleInRadians
      */
-    private void moveAtAngle(double angleInRadians)
+    protected void moveAtAngle(double angleInRadians, double power)
     {
         double temp = -angleInRadians + Math.PI/4.0;
 
-        double front_left = DRIVE_SPEED * Math.cos(temp);
-        double front_right = DRIVE_SPEED * Math.sin(temp);
-        double rear_left = DRIVE_SPEED * Math.sin(temp);
-        double rear_right = DRIVE_SPEED * Math.cos(temp);
+        double front_left = power * Math.cos(temp);
+        double front_right = power * Math.sin(temp);
+        double rear_left = power * Math.sin(temp);
+        double rear_right = power * Math.cos(temp);
 
         // normalize the wheel speed so we don't exceed 1
         double max = Math.abs(front_left);
@@ -447,9 +473,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @param ms: Number of milliseconds to keep the motos moving
      */
-    protected void moveRightByTime(int ms)
+    protected void moveRightByTime(int ms, double power)
     {
-        move(TravelDirection.RIGHT, ms,false);
+        move(TravelDirection.RIGHT, ms, power, false);
     }
 
     /**
@@ -457,9 +483,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @param ms: Number of milliseconds to keep the motos moving
      */
-    protected void moveLeftByTime(int ms)
+    protected void moveLeftByTime(int ms, double power)
     {
-        move(TravelDirection.LEFT, ms,false);
+        move(TravelDirection.LEFT, ms, power, false);
     }
 
     /**
@@ -467,9 +493,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @param ms: Number of milliseconds to keep the motos moving
      */
-    protected void moveBackwardByTime(int ms)
+    protected void moveBackwardByTime(int ms, double power)
     {
-        move(TravelDirection.BACKWARD, ms,false);
+        move(TravelDirection.BACKWARD, ms, power,false);
     }
 
     /**
@@ -477,10 +503,108 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @param ms: Number of milliseconds to keep the motos moving
      */
-    protected void moveForwardByTime(int ms)
+    protected void moveForwardByTime(int ms, double power)
     {
-        move(TravelDirection.FORWARD, ms, false);
+        move(TravelDirection.FORWARD, ms, power,false);
     }
+
+
+
+    /**
+     * This method moves the robot left until it is x inches from an object
+     * @param x
+     * @param ms
+     * @param power
+     */
+    public void moveXInchesFromLeftObject(double x, double ms, double power) {
+
+        if (distanceLeft != null && distanceLeft.getDistance(DistanceUnit.INCH) < x ) {
+            return;
+        }
+
+        powerPropulsion(TravelDirection.LEFT, power);
+        double limit = runtime.milliseconds() + ms;
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.LEFT) &&
+            runtime.milliseconds() < limit &&
+                    distanceLeft != null && distanceLeft.getDistance(DistanceUnit.INCH) > x
+        ) {
+//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
+//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
+//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
+            idle();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+    /**
+     * This method moves the robot forward until it is x inches from an object
+     * @param x
+     * @param ms
+     * @param power
+     */
+    public void moveXInchesFromFrontObject(double x, double ms, double power) {
+
+        if (distanceFront != null && distanceFront.getDistance(DistanceUnit.INCH) < x ) {
+            return;
+        }
+
+        powerPropulsion(TravelDirection.FORWARD, power);
+        double limit = runtime.milliseconds() + ms;
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.FORWARD) &&
+            runtime.milliseconds() < limit &&
+            distanceFront != null && distanceFront.getDistance(DistanceUnit.INCH) > x
+        ) {
+//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
+//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
+//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
+            idle();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+    /**
+     * This method moves the robot backward until it is x inches from an object
+     * @param x
+     * @param ms
+     * @param power
+     */
+    public void moveXInchesFromBackObject(double x, double ms, double power) {
+
+        if (distanceBack != null && distanceBack.getDistance(DistanceUnit.INCH) < x ) {
+            return;
+        }
+
+        powerPropulsion(TravelDirection.BACKWARD, power);
+        double limit = runtime.milliseconds() + ms;
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.BACKWARD) &&
+            runtime.milliseconds() < limit &&
+            distanceBack != null && distanceBack.getDistance(DistanceUnit.INCH) > x
+        ) {
+//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
+//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
+//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
+            idle();
+        }
+
+        stopMoving();
+        return;
+    }
+
 
     /**
      *  move()
@@ -493,7 +617,48 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * @param ms                    : Limit of time the motos will be in motion
      * @param untilRealigned         : The robot will move until oriented
      */
-    private void move(TravelDirection direction, double ms, boolean untilRealigned) {
+    private void move(TravelDirection direction, double ms, double power, boolean untilRealigned) {
+
+        if (power == 0) {
+            power = DRIVE_SPEED;
+        }
+        powerPropulsion(direction, power);
+
+        double limit = runtime.milliseconds() + ms;
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(direction) &&
+            !isStalled() &&
+            runtime.milliseconds() < limit &&
+            (!untilRealigned || untilRealigned && botCurrentPlacement != null)
+        ) {
+            idle();
+        }
+
+        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
+        dbugThis(String.format("isStalled : %b", isStalled()));
+        dbugThis(String.format("untilRealigned : %b", untilRealigned));
+
+        stopMoving();
+        botCurrentPlacement = navigation.getPlacement();
+        return;
+    }
+
+
+    /**
+     * The method will power the wheels to go in the right direction.
+     * Be careful, nothing stops the robot, you need to combine this function with a control
+     * loop.
+     *
+     * @param direction
+     * @param power
+     */
+    protected void powerPropulsion(TravelDirection direction, double power) {
+
+        if (power == 0) {
+            power = DRIVE_SPEED;
+        }
 
         double multiplierFL = 0;
         double multiplierFR = 0;
@@ -530,30 +695,29 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         }
 
-        botBase.getFrontRightDrive().setPower(DRIVE_SPEED * multiplierFR);
-        botBase.getRearRightDrive().setPower(DRIVE_SPEED * multiplierRR);
-        botBase.getFrontLeftDrive().setPower(DRIVE_SPEED * multiplierFL);
-        botBase.getRearLeftDrive().setPower(DRIVE_SPEED * multiplierRL);
+        botBase.getFrontRightDrive().setPower(power * multiplierFR);
+        botBase.getRearRightDrive().setPower(power * multiplierRR);
+        botBase.getFrontLeftDrive().setPower(power * multiplierFL);
+        botBase.getRearLeftDrive().setPower(power * multiplierRL);
+    }
 
-        double limit = runtime.milliseconds() + ms;
 
-        while (
-            opModeIsActive() &&
-            !isHittingSomething(direction) &&
-            !isStalled() &&
-            runtime.milliseconds() < limit &&
-            (!untilRealigned || untilRealigned && botCurrentPlacement != null)
-        ) {
-            idle();
-        }
 
-        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
-        dbugThis(String.format("isStalled : %b", isStalled()));
-        dbugThis(String.format("untilRealigned : %b", untilRealigned));
+    public void setCameraVerticalPosition(double position) {
 
-        stopMoving();
-        botCurrentPlacement = navigation.getPlacement();
-        return;
+        position = Math.min(Math.max(0, position), 1.0);
+        cameraPanVerticalPosition = position;
+        camera_pan_vertical.setPosition(position);
+        dbugThis("Current vertical position is " + position);
+    }
+
+
+    public void setCameraHorizontalPosition(double position) {
+
+        position = Math.min(Math.max(0, position), 1.0);
+        cameraPanHorizontalPosition = position;
+        camera_pan_horizontal.setPosition(position);
+        dbugThis("Current horizontal position is " + position);
     }
 
 
@@ -562,23 +726,30 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * @return
      */
      public void moveCamera() {
-         if ( camera_pan == null ) {
+         if ( camera_pan_vertical == null ) {
              return;
          }
 
-         double position = camera_pan.getPosition();
+         double position = cameraPanHorizontalPosition;
+         int direction  = cameraPanHorizontalDirection;
+
+         dbugThis(position + "");
 
          // pan right
-         if (position == 0.0 || position > 0.5) {
-             position = Math.min(position + 0.2, 1);
+         if ( direction > 0 ) {
+             position = Math.min(position + 0.05, 1.0);
+             if (position == 1.0) {
+                 cameraPanHorizontalDirection = -cameraPanHorizontalDirection;
+             }
          }
 
-         // pan left
-         else if (position == 1.0 || position < 0.5 ) {
-             position = Math.max(position - 0.2, 0);
+         else if ( direction < 0 ) {
+             position = Math.max(position - 0.05, 0.0);
+             if (position == 0.0) {
+                 cameraPanHorizontalDirection = -cameraPanHorizontalDirection;
+             }
          }
-
-         camera_pan.setPosition(position);
+         setCameraHorizontalPosition(position);
      }
 
 
@@ -596,25 +767,27 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected boolean isStalled()
     {
 
-        // check every 2s if position has changed significantly (current-previous > 1in.).  If it did, raise a flag
-        if ((int) runtime.seconds() % 2 == 0) {
-            if (!hasMovedSignificantly(botPreviousPlacement, botCurrentPlacement)) {
-                stallProbability++;
-            } else {
-                stallProbability = 0;
-            }
-
-            botPreviousPlacement = botCurrentPlacement;
-            botCurrentPlacement = navigation.getPlacement();
-        }
-
-        if ( stallProbability > ATTEMPTS_BEFORE_STALL_DETECTED ) {
-
-
-            return true;
-        }
-
         return false;
+
+//        // check every 2s if position has changed significantly (current-previous > 1in.).  If it did, raise a flag
+//        if ((int) runtime.seconds() % 2 == 0) {
+//            if (!hasMovedSignificantly(botPreviousPlacement, botCurrentPlacement)) {
+//                stallProbability++;
+//            } else {
+//                stallProbability = 0;
+//            }
+//
+//            botPreviousPlacement = botCurrentPlacement;
+//            botCurrentPlacement = navigation.getPlacement();
+//        }
+//
+//        if ( stallProbability > ATTEMPTS_BEFORE_STALL_DETECTED ) {
+//
+//
+//            return true;
+//        }
+//
+//        return false;
     }
 
 
@@ -780,7 +953,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         }
 
         else if (navigation.getType() == NavigationTypesEnum.SENSORS) {
-            move(randomEnum(TravelDirection.class), 800, true);
+            move(randomEnum(TravelDirection.class), 800, 0, true);
         }
     }
 
@@ -808,7 +981,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     void dbugThis(String s) {
 
         if ( DEBUG == true ) {
-            Log.d("OpModesBaseClass: ", s);
+            Log.d("AUTONOMOUS: ", s);
         }
     }
 
