@@ -357,32 +357,23 @@ public class VuforiaNavigation implements NavigationInterface {
         for (VuforiaTrackable trackable : allTrackables) {
 
             if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-//                targetName = trackable.getName();
-//                dbugThis(String.format("Visible Target: %s", targetName));
-//
-//                if (targetName.equals(skyStoneTargetName)) {
-                    targetVisible = true;
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                    if (robotLocationTransform != null) {
-                        dbugThis("transformation content:");
-                        dbugThis(robotLocationTransform.toString());
-                        lastStoneLocation = robotLocationTransform;
-                        break;
-                    }
-//                }
+                targetVisible = true;
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose();
+                if (robotLocationTransform != null) {
+                    lastStoneLocation = robotLocationTransform;
+                    break;
+                }
             }
         }
 
         // Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
-            dbugThis("target is visible getting translation matrix");
             // express position (translation) of robot in inches.
             VectorF translation = lastStoneLocation.getTranslation();
-            Orientation rotation = Orientation.getOrientation(lastStoneLocation, EXTRINSIC, XYZ, DEGREES);
-            placement = new FieldPlacement(-translation.get(0) / mmPerInch, -translation.get(1) / mmPerInch, rotation.thirdAngle);
-
+            placement = new FieldPlacement(translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, 0);
+            dbugThis("Target is visible. Placement Y : " + placement.y);
         }
-        if (placement != null ) dbugThis("Returning non null placement");
+        if (placement == null ) dbugThis("Returning null placement");
         return placement;
     }
 

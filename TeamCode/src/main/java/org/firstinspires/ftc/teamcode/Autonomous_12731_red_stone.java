@@ -5,12 +5,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous(name="Red Alliance Team 12731", group="1")
-public class Autonomous_12731_red extends Autonomous_12731 {
+@Autonomous(name="Red Alliance Stone - 12731", group="1")
+public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
     @Override
     public void initAutonomous() {
+
         super.initAutonomous();
+        currentState = STATE_moveToStones;
     }
 
     @Override
@@ -81,6 +83,16 @@ public class Autonomous_12731_red extends Autonomous_12731 {
         moveXInchesFromLeftObject(9.0, 5000,0.8);
         gotoHeading(0);
         currentState = STATE_moveToStones;
+        return;
+    }
+
+
+
+    protected void parkUnderBridgeState() {
+        gotoHeading(0);
+        moveXInchesFromBackObject(12.0, 5000,0.9);
+        moveLeftByTime(2000, 0.9);
+        currentState = STATE_done;
         return;
     }
 

@@ -114,8 +114,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
     // Vuforia translation from the the robot center where x -> front, y -> left and  z -> up
 
     final float CAMERA_FORWARD_DISPLACEMENT  = 8.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
-    final float CAMERA_VERTICAL_DISPLACEMENT = 6.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-    final float CAMERA_LEFT_DISPLACEMENT     = 8.0f * mmPerInch;    // eg: Camera is ON the left side
+    final float CAMERA_VERTICAL_DISPLACEMENT = 0.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
+    final float CAMERA_LEFT_DISPLACEMENT     = 0.0f * mmPerInch;    // eg: Camera is ON the left side
 
 
 //
@@ -677,10 +677,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
         ) {
             idle();
         }
-
-        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
-        dbugThis(String.format("isStalled : %b", isStalled()));
-        dbugThis(String.format("untilRealigned : %b", untilRealigned));
+//
+//        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
+//        dbugThis(String.format("isStalled : %b", isStalled()));
+//        dbugThis(String.format("untilRealigned : %b", untilRealigned));
 
         stopMoving();
         return;
@@ -1038,29 +1038,29 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public boolean isHittingSomething(TravelDirection direction) {
 
-        double distance = 0.0;
-        switch (direction) {
-            case FORWARD:
-                if ( distanceFront != null && Math.max(distance, distanceFront.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
-                    return true;
-                }
-                break;
-            case BACKWARD:
-                if ( distanceBack != null && Math.max(distance, distanceBack.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
-                    return true;
-                }
-                break;
-            case LEFT:
-                if ( distanceLeft != null && Math.max(distance, distanceLeft.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
-                    return true;
-                }
-                break;
-            case RIGHT:
-                if ( distanceRight != null && Math.max(distance, distanceRight.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
-                    return true;
-                }
-                break;
-        }
+//        double distance = 0.0;
+//        switch (direction) {
+//            case FORWARD:
+//                if ( distanceFront != null && Math.max(distance, distanceFront.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
+//                    return true;
+//                }
+//                break;
+//            case BACKWARD:
+//                if ( distanceBack != null && Math.max(distance, distanceBack.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
+//                    return true;
+//                }
+//                break;
+//            case LEFT:
+//                if ( distanceLeft != null && Math.max(distance, distanceLeft.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
+//                    return true;
+//                }
+//                break;
+//            case RIGHT:
+//                if ( distanceRight != null && Math.max(distance, distanceRight.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
+//                    return true;
+//                }
+//                break;
+//        }
         return false;
     }
 }
