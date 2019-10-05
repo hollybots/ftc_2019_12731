@@ -27,6 +27,7 @@ package org.firstinspires.ftc.teamcode;/* Copyright (c) 2017 FIRST. All rights r
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -34,6 +35,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+
+import org.firstinspires.ftc.robotcontroller.external.samples.SensorMRRangeSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
  * This file contains an example of an iterative (Non-Linear) "OpMode".
@@ -59,7 +63,14 @@ public class BasicOpMode_Iterative extends OpMode
     private DcMotor FrontRightDrive = null;
     private DcMotor BackLeftDrive = null;
     private DcMotor BackRightDrive = null;
+    private DcMotor Coil = null;
+    private DcMotor Tilt = null;
+    private Servo ClawServo2 = null;
+    private Servo ClawServo1 = null;
+    private ModernRoboticsI2cRangeSensor rangeSensorFront = null;
+    private ModernRoboticsI2cRangeSensor rangeSensorBack = null;
     private Servo servo = null;
+    private Servo servoPhone = null;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -75,7 +86,14 @@ public class BasicOpMode_Iterative extends OpMode
         FrontRightDrive = hardwareMap.get(DcMotor.class, "right_drive");
         BackLeftDrive  = hardwareMap.get(DcMotor.class, "Bleft_drive");
         BackRightDrive = hardwareMap.get(DcMotor.class, "Bright_drive");
+        Coil = hardwareMap.get(DcMotor.class, "Coil");
+        Tilt = hardwareMap.get(DcMotor.class, "Tilt");
+        ClawServo1 = hardwareMap.get(Servo.class, "ClawServo1");
+        ClawServo2 = hardwareMap.get(Servo.class, "ClawServo2");
         servo = hardwareMap.get(Servo.class, "servo");
+        servoPhone = hardwareMap.get(Servo.class, "servoPhone");
+        rangeSensorFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class,  "rangeSensorFront");
+        rangeSensorBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class,  "rangeSensorBack");
 
 
         // Most robots need the motor on one side to be reversed to drive forward
@@ -115,7 +133,10 @@ public class BasicOpMode_Iterative extends OpMode
         double backY;
         double forwardX;
         double backX;
+        double CoilPower;
+        double TiltPower;
         double servoPower;
+        double servoPhonePower;
 
         // Choose to drive using either Tank Mode, or POV Mode
         // Comment out the method that's not used.  The default below is POV.
@@ -133,7 +154,23 @@ public class BasicOpMode_Iterative extends OpMode
          backY = gamepad1.left_stick_y;
          forwardX  = gamepad1.left_stick_x;
          backX = -gamepad1.left_stick_x;
+         CoilPower = gamepad1.right_stick_y;
+         TiltPower = gamepad1.right_stick_x;
          servoPower = gamepad1.left_trigger;
+         servoPhonePower = gamepad1.right_trigger;
+
+         if (gamepad1.a == true){
+             ClawServo1.setPosition(180);
+             ClawServo2.setPosition(180);
+         }
+
+         if (gamepad1.right_stick_y > 0.1) {
+             Coil.setPower(CoilPower);
+         }
+
+         if (gamepad1.right_stick_x > 0.1){
+             Tilt.setPower(TiltPower);
+         }
 
          if (gamepad1.left_stick_x > 0.1) {
              FrontLeftDrive.setPower(forwardX);
@@ -163,7 +200,14 @@ public class BasicOpMode_Iterative extends OpMode
             BackRightDrive.setPower(forwardY);
         }
 
-        servo.setPosition(servoPower);
+        telemetry.addData("raw ultrasonic front", rangeSensorFront.getDistance(DistanceUnit.INCH));
+        telemetry.addData("raw optical front", rangeSensorFront.getDistance(DistanceUnit.INCH));
+        telemetry.addData("raw ultrasonic back", rangeSensorBack.getDistance(DistanceUnit.INCH));
+        telemetry.addData("raw optical back", rangeSensorBack.getDistance(DistanceUnit.INCH));
+
+
+            servo.setPosition(servoPower);
+            servoPhone.setPosition(servoPhonePower);
 
         // Send calculated power to wheels
 

@@ -1,13 +1,14 @@
 package org.firstinspires.ftc.teamcode;
 
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @Autonomous(name="Red Alliance Team 12731", group="1")
-public class Autonomous_12731 extends AutonomousOpModesBase {
-
+public class Autonomous_12731new extends AutonomousOpModesBase {
+    private Servo servo = null;
+    private DcMotor Coil = null;
     // Sounds
     BotSounds botSounds = null;
 
@@ -24,6 +25,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
          * SOUNDS
          */
         botSounds = new BotSounds(hardwareMap);
+        servo = hardwareMap.get(Servo.class, "servo");
+        Coil = hardwareMap.get(DcMotor.class, "Coil");
     }
 
     @Override
@@ -58,17 +61,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         while (opModeIsActive()) {
 
             dbugThis(isStalled() + "");
-
-            moveForwardByTime(1000);
-            justWait(1000);
-            moveBackwardByTime(1000);
-            botSounds.play("ss_bb8_up");
-            justWait(1000);
-            moveLeftByTime(1000);
-            justWait(1000);
-            moveRightByTime(1000);
-            botSounds.play("ss_roger_roger");
-            justWait(1000);
+            moveForwardByTime(100);
+            moveRightByTime(6000);
             break;
         }
 
@@ -77,3 +71,5 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         stopMoving();
     }
 }
+
+

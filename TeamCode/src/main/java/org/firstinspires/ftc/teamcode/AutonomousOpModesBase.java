@@ -540,7 +540,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(direction) &&
-            !isStalled() &&
+//            !isStalled() &&
             runtime.milliseconds() < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
