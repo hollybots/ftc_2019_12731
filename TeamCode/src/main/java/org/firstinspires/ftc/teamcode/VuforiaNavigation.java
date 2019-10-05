@@ -79,6 +79,7 @@ public class VuforiaNavigation implements NavigationInterface {
 
     // Class Members
     private OpenGLMatrix lastLocation = null;
+    private OpenGLMatrix lastStoneLocation = null;
 
     /**
      * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
@@ -145,7 +146,6 @@ public class VuforiaNavigation implements NavigationInterface {
         VuforiaTrackable stoneTarget = targetsSkyStone.get(0);
         stoneTarget.setName("Stone Target");
 
-
 //        VuforiaTrackable blueRearBridge = targetsSkyStone.get(1);
 //        blueRearBridge.setName("Blue Rear Bridge");
 //        VuforiaTrackable redRearBridge = targetsSkyStone.get(2);
@@ -156,12 +156,12 @@ public class VuforiaNavigation implements NavigationInterface {
 //        blueFrontBridge.setName("Blue Front Bridge");
 
 
-        VuforiaTrackable red1 = targetsSkyStone.get(5);
-        red1.setName("Red Perimeter 1");
-        VuforiaTrackable red2 = targetsSkyStone.get(6);
-        red2.setName("Red Perimeter 2");
-        VuforiaTrackable front1 = targetsSkyStone.get(7);
-        front1.setName("Front Perimeter 1");
+//        VuforiaTrackable red1 = targetsSkyStone.get(5);
+//        red1.setName("Red Perimeter 1");
+//        VuforiaTrackable red2 = targetsSkyStone.get(6);
+//        red2.setName("Red Perimeter 2");
+//        VuforiaTrackable front1 = targetsSkyStone.get(7);
+//        front1.setName("Front Perimeter 1");
 //        VuforiaTrackable front2 = targetsSkyStone.get(8);
 //        front2.setName("Front Perimeter 2");
 //        VuforiaTrackable blue1 = targetsSkyStone.get(9);
@@ -170,8 +170,8 @@ public class VuforiaNavigation implements NavigationInterface {
 //        blue2.setName("Blue Perimeter 2");
 //        VuforiaTrackable rear1 = targetsSkyStone.get(11);
 //        rear1.setName("Rear Perimeter 1");
-        VuforiaTrackable rear2 = targetsSkyStone.get(12);
-        rear2.setName("Rear Perimeter 2");
+//        VuforiaTrackable rear2 = targetsSkyStone.get(12);
+//        rear2.setName("Rear Perimeter 2");
 
         // For convenience, gather together all the trackable objects in one easily-iterable collection */
         allTrackables = new ArrayList<VuforiaTrackable>();
@@ -220,18 +220,18 @@ public class VuforiaNavigation implements NavigationInterface {
 //                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 0, bridgeRotY, 0)));
 
         //Set the position of the perimeter targets with relation to origin (center of field)
-        red1.setLocation(OpenGLMatrix
-                .translation(quadField, -halfField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180)));
-
-        red2.setLocation(OpenGLMatrix
-                .translation(-quadField, -halfField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180)));
-
-        front1.setLocation(OpenGLMatrix
-                .translation(-halfField, -quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90)));
-
+//        red1.setLocation(OpenGLMatrix
+//                .translation(quadField, -halfField, mmTargetHeight)
+//                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180)));
+//
+//        red2.setLocation(OpenGLMatrix
+//                .translation(-quadField, -halfField, mmTargetHeight)
+//                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 180)));
+//
+//        front1.setLocation(OpenGLMatrix
+//                .translation(-halfField, -quadField, mmTargetHeight)
+//                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , 90)));
+//
 //        front2.setLocation(OpenGLMatrix
 //                .translation(-halfField, quadField, mmTargetHeight)
 //                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, 90)));
@@ -247,10 +247,10 @@ public class VuforiaNavigation implements NavigationInterface {
 //        rear1.setLocation(OpenGLMatrix
 //                .translation(halfField, quadField, mmTargetHeight)
 //                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0 , -90)));
-
-        rear2.setLocation(OpenGLMatrix
-                .translation(halfField, -quadField, mmTargetHeight)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
+//
+//        rear2.setLocation(OpenGLMatrix
+//                .translation(halfField, -quadField, mmTargetHeight)
+//                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, 90, 0, -90)));
 
         //
         // Create a transformation matrix describing where the phone is on the robot.
@@ -357,41 +357,32 @@ public class VuforiaNavigation implements NavigationInterface {
         for (VuforiaTrackable trackable : allTrackables) {
 
             if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
-
-                targetName = trackable.getName();
-                dbugThis(String.format("Visible Target: %s", targetName));
-
-                if (targetName !=  skyStoneTargetName) {
-                    continue;
-                }
-
-                targetVisible = true;
-
-                // getUpdatedRobotLocation() will return null if no new information is available since
-                // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-                break;
+//                targetName = trackable.getName();
+//                dbugThis(String.format("Visible Target: %s", targetName));
+//
+//                if (targetName.equals(skyStoneTargetName)) {
+                    targetVisible = true;
+                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getUpdatedRobotLocation();
+                    if (robotLocationTransform != null) {
+                        dbugThis("transformation content:");
+                        dbugThis(robotLocationTransform.toString());
+                        lastStoneLocation = robotLocationTransform;
+                        break;
+                    }
+//                }
             }
         }
 
         // Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
-
+            dbugThis("target is visible getting translation matrix");
             // express position (translation) of robot in inches.
-            VectorF translation = lastLocation.getTranslation();
-
-            dbugThis(String.format("Pos (in)  : {X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch));
-
-            // express the rotation of the robot in degrees.
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            dbugThis(String.format("Rot (deg)  :  {Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle));
-
+            VectorF translation = lastStoneLocation.getTranslation();
+            Orientation rotation = Orientation.getOrientation(lastStoneLocation, EXTRINSIC, XYZ, DEGREES);
             placement = new FieldPlacement(-translation.get(0) / mmPerInch, -translation.get(1) / mmPerInch, rotation.thirdAngle);
+
         }
+        if (placement != null ) dbugThis("Returning non null placement");
         return placement;
     }
 

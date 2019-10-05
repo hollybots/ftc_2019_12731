@@ -30,6 +30,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -46,7 +48,11 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     static final double     K                           = 0.2;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    private BotBase         botBase = null;
+    CRServo slide                               = null;
+    Servo claw                                  = null;
+
+    boolean use2Controllers                             = false;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -58,12 +64,9 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         super.init();
 
-        /* ************************************
-            PROPULSION MOTORS
-         */
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-
+        /* Claw Mechanism */
+        slide               = hardwareMap.get(CRServo.class, "slide");
+        claw                = hardwareMap.get(Servo.class, "claw");
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -113,6 +116,11 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         double right        = gamepad1.right_stick_x;
         double clockwise    = gamepad1.left_stick_x;
 
+        double slideOut         = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
+        double slideIn          = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
+        boolean clawDown         = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
+        boolean clawUp           = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
+
 
         // Now add a tuning constant K for the “rotate” axis sensitivity.
         // Start with K=0, and increase it very slowly (do not exceed K=1)
@@ -158,6 +166,23 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         }
 
 
+        if (clawDown) {
+            closeClaw();
+        }
+        else if (clawUp) {
+            openClaw();
+        }
+
+        if (slideOut > 0) {
+            slide.setPower(-0.5);
+        }
+        else if (slideIn > 0) {
+            slide.setPower(0.5);
+        }
+        else {
+            slide.setPower(0.0);
+        }
+
         // Send calculated power to wheels
         botBase.getFrontLeftDrive().setPower(front_left);
         botBase.getFrontRightDrive().setPower(front_right);
@@ -177,5 +202,22 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void stop() {
         super.stop();
+    }
+
+
+    private void openClaw() {
+        claw.setPosition(0);
+    }
+
+    private void closeClaw() {
+        claw.setPosition(0.9);
+    }
+
+    private void slideOut() {
+        slide.setPower(-0.5);
+    }
+
+    private void slideIn() {
+        slide.setPower(0.5);
     }
 }

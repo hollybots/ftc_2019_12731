@@ -86,7 +86,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
     static final int TURN_DIRECTION_LEFT                = 1;  // this is a direction for
     static final int TURN_DIRECTION_RIGHT               = -1;
     static final int ERROR_POSITION_COUNT               = 10;
-
     static final double DRIVE_SPEED                     = 0.8;
     static final double TURNING_SPEED                   = 0.3;
 
@@ -115,8 +114,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
     // Vuforia translation from the the robot center where x -> front, y -> left and  z -> up
 
     final float CAMERA_FORWARD_DISPLACEMENT  = 8.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
-    final float CAMERA_VERTICAL_DISPLACEMENT = 9.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-    final float CAMERA_LEFT_DISPLACEMENT     = 4.0f * mmPerInch;    // eg: Camera is ON the left side
+    final float CAMERA_VERTICAL_DISPLACEMENT = 6.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
+    final float CAMERA_LEFT_DISPLACEMENT     = 8.0f * mmPerInch;    // eg: Camera is ON the left side
 
 
 //
@@ -270,14 +269,24 @@ public class AutonomousOpModesBase extends LinearOpMode {
         distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
         distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
         distanceLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range_1");
+        distanceRight = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range_1");
 
 
         /* **********************************
             SERVO
          */
-        camera_pan_horizontal = hardwareMap.get(Servo.class, "camera_pan_horizontal");
-        camera_pan_vertical = hardwareMap.get(Servo.class, "camera_pan_vertical");
-        setCameraVerticalPosition(0.5);
+        try {
+            camera_pan_horizontal = hardwareMap.get(Servo.class, "camera_pan_horizontal");
+        } catch (Exception $e) {
+            camera_pan_horizontal = null;
+        }
+        try {
+            camera_pan_vertical = hardwareMap.get(Servo.class, "camera_pan_vertical");
+        } catch (Exception $e) {
+            camera_pan_vertical = null;
+        }
+
+        setCameraVerticalPosition(0.6);
         setCameraHorizontalPosition(0.5);
 
         telemetry.addData("Status", "Robot Initialized");
@@ -543,6 +552,39 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
+     * This method moves the robot left until it is x inches from an object
+     * @param x
+     * @param ms
+     * @param power
+     */
+    public void moveXInchesFromRightObject(double x, double ms, double power) {
+
+        if (distanceRight != null && distanceRight.getDistance(DistanceUnit.INCH) < x ) {
+            dbugThis("Getting out of here");
+            return;
+        }
+
+        powerPropulsion(TravelDirection.RIGHT, power);
+        double limit = runtime.milliseconds() + ms;
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.RIGHT) &&
+            runtime.milliseconds() < limit &&
+                    distanceRight != null && distanceRight.getDistance(DistanceUnit.INCH) > x
+        ) {
+//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
+//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
+//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
+            idle();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+    /**
      * This method moves the robot forward until it is x inches from an object
      * @param x
      * @param ms
@@ -641,7 +683,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
         dbugThis(String.format("untilRealigned : %b", untilRealigned));
 
         stopMoving();
-        botCurrentPlacement = navigation.getPlacement();
         return;
     }
 
@@ -704,20 +745,22 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     public void setCameraVerticalPosition(double position) {
-
+        if (camera_pan_vertical == null) {
+            return;
+        }
         position = Math.min(Math.max(0, position), 1.0);
         cameraPanVerticalPosition = position;
         camera_pan_vertical.setPosition(position);
-        dbugThis("Current vertical position is " + position);
     }
 
 
     public void setCameraHorizontalPosition(double position) {
-
+        if (camera_pan_horizontal == null) {
+            return;
+        }
         position = Math.min(Math.max(0, position), 1.0);
         cameraPanHorizontalPosition = position;
         camera_pan_horizontal.setPosition(position);
-        dbugThis("Current horizontal position is " + position);
     }
 
 

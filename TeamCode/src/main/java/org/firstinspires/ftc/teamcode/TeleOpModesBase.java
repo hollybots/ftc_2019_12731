@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -16,8 +17,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Disabled
 public class TeleOpModesBase extends OpMode {
 
-    protected BotBase botBase = new BotBase();
+    protected BotBase botBase;
 
+    Servo camera_pan_vertical = null;
+    double cameraPanVerticalPosition        = 0;
 
     protected boolean DEBUG = true;
 
@@ -32,6 +35,7 @@ public class TeleOpModesBase extends OpMode {
     @Override
     public void init() {
 
+        botBase = new BotBase();
         botBase.init(hardwareMap);
 
         botBase.getFrontLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -45,6 +49,14 @@ public class TeleOpModesBase extends OpMode {
 
         botBase.getRearRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         botBase.getRearRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        try {
+            camera_pan_vertical = hardwareMap.get(Servo.class, "camera_pan_vertical");
+        } catch (Exception $e) {
+            camera_pan_vertical = null;
+        }
+
+        setCameraVerticalPosition(0.6);
     }
 
     /**
@@ -71,6 +83,16 @@ public class TeleOpModesBase extends OpMode {
         if ( DEBUG == true ) {
             Log.d("OpModesBaseClass: ", s);
         }
+    }
+
+
+    public void setCameraVerticalPosition(double position) {
+        if (camera_pan_vertical == null) {
+            return;
+        }
+        position = Math.min(Math.max(0, position), 1.0);
+        cameraPanVerticalPosition = position;
+        camera_pan_vertical.setPosition(position);
     }
 
 }

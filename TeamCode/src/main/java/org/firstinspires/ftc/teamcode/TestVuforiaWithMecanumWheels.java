@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import com.qualcomm.ftccommon.SoundPlayer;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
@@ -40,7 +41,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 @TeleOp(name="Test Mecanum & Vuforia", group="3")
-//@Disabled
+@Disabled
 public class TestVuforiaWithMecanumWheels extends TeleOpModesBase
 {
     static final double     AUTONOMOUS_SPEED            = 0.6;

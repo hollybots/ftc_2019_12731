@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 @TeleOp(name="Test Mecanum", group="3")
-//@Disabled
+@Disabled
 public class TestMecanumWheelsPropulsion extends TeleOpModesBase
 {
     static final double     AUTONOMOUS_SPEED            = 0.6;

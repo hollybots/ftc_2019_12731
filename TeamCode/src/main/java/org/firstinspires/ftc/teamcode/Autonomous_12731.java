@@ -4,8 +4,12 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous(name="Red Alliance Team 12731", group="1")
+@Autonomous(name="Base Team 12731", group="1")
+@Disabled
+
 public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected static final int STATE_idle                       = 0;
@@ -21,32 +25,36 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected static final int STATE_dropOffStone               = 8;
     protected static final int STATE_travelHome                 = 9;
 
-    private int currentState                                    = STATE_moveToStones;
-    FieldPlacement BRIDGE_PLACEMENT                             = null;
+    protected int currentState                                  = STATE_idle;
 
-
-    FieldPlacement stoneRelativePlacement = null;
-
+    protected FieldPlacement stoneRelativePlacement       = null;
+    protected CRServo slide                               = null;
+    protected Servo claw                                  = null;
 
     // Sounds
-    BotSounds botSounds = null;
+    protected BotSounds botSounds = null;
 
     @Override
     public void initAutonomous() {
 
         DEBUG = true;
-        BRIDGE_PLACEMENT       = new FieldPlacement(0, -46);
-
         super.initAutonomous();
-        justWait(2000);
 
         /**
          * Add everything that is NOT Sensors or Propulsion motors
          */
+
+
         /**
          * SOUNDS
          */
         botSounds = new BotSounds(hardwareMap);
+
+        /**
+         * CLAW Mechanism
+         */
+        slide               = hardwareMap.get(CRServo.class, "slide");
+        claw                = hardwareMap.get(Servo.class, "claw");
 
     }
 
@@ -60,6 +68,9 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         // Enable navigation system
         navigation.activate();
+
+        setCameraVerticalPosition(0.35);
+        currentState = STATE_moveToStones;
 
         /*********************************************
          * WAIT FOR START
@@ -76,8 +87,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
          * GAME IS ON !!
          * *******************************************/
 
-        FieldPlacement initialPosition = new FieldPlacement(0,0);
-        setCameraVerticalPosition(0.65);
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -106,12 +115,12 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
                     alignWithStoneState();
                     break;
 
-                case STATE_pickUpStone:
-                    pickUpStoneState();
-                    break;
-
                 case STATE_getCloseEnoughToPickup:
                     getCloseEnoughToPickUpState();
+                    break;
+
+                case STATE_pickUpStone:
+                    pickUpStoneState();
                     break;
 
                 case STATE_travelToBuildSite:
@@ -141,11 +150,11 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     /**
      * We need to move close enough to be able to see the stone
      */
-    private void moveToStoneState() {
+    protected void moveToStoneState() {
 
-        setCameraVerticalPosition(0.55);
-        setCameraHorizontalPosition(0.5);
-        moveXInchesFromFrontObject(14.0, 10000, 0.9);
+        openClaw();
+        slideByTime(1000, 0.8);
+        moveXInchesFromFrontObject(13.0, 10000, 0.9);
         currentState = STATE_scanForStone;
         return;
     }
@@ -155,60 +164,45 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
      * Here we scan left an right to find a stone.  One the stone is found
      * we go to the next state
      */
-    private void scanForStoneState() {
-
-
-        stoneRelativePlacement = navigation.getSkyStone("Stone Target");
-        if (stoneRelativePlacement != null ) {
-            gotoHeading(0);
-            currentState = STATE_alignWithStone;
-            return;
-        }
-
-        moveXInchesFromLeftObject(9.0, 10000, 0.5);
-
-        boolean goingRight = false;
-
-        while (opModeIsActive() && stoneRelativePlacement == null) {
-
-            stoneRelativePlacement = navigation.getSkyStone("Stone Target");
-            if (stoneRelativePlacement != null) {
-                stopMoving();
-                break;
-            }
-            if ( goingRight ) {
-                gotoHeading(0);
-                moveLeftByTime(4000, 0.4);
-            } else {
-                gotoHeading(0);
-                moveRightByTime(4000, 0.4);
-            }
-
-            goingRight = !goingRight;
-            telemetry.update();
-        }
-        gotoHeading(0);
-        currentState = STATE_alignWithStone;
-        return;
+    protected void scanForStoneState() {
+        // implement in alliance specific
     }
 
 
 
-    private void alignWithStoneState() {
+    protected void alignWithStoneState() {
 
-        stoneRelativePlacement = navigation.getSkyStone("Stone Target");
+        double offset = 0.0;
+        stopMoving();
+        dbugThis("Slowly looking for Stone");
 
-        while (stoneRelativePlacement != null && Math.abs(stoneRelativePlacement.y) > 1.0 && opModeIsActive() ) {
-            if (stoneRelativePlacement.y < 35.0) {
-                if (stoneRelativePlacement.y > 0) {
-                    dbugThis("Position Y : " + stoneRelativePlacement.y + ", going LEFT");
-                    powerPropulsion(TravelDirection.LEFT, 0.2);
-                } else if (stoneRelativePlacement.y < 0) {
-                    dbugThis("Position Y : " + stoneRelativePlacement.y + ", going RIGHT");
-                    powerPropulsion(TravelDirection.RIGHT, 0.2);
-                }
-            }
+        int x = 0;
+
+        while (opModeIsActive()) {
+
+            x++;
+
             stoneRelativePlacement = navigation.getSkyStone("Stone Target");
+            if ( stoneRelativePlacement == null ) {
+                continue;
+            }
+
+            if ( Math.abs(stoneRelativePlacement.y - offset) < 2.0  ) {
+                break;
+            }
+
+            if (stoneRelativePlacement.y - offset > 35.0) {
+                break;
+            }
+
+            if (stoneRelativePlacement.y - offset > 0.0) {
+               if (x % 100 == 0) { dbugThis("Position Y : " + stoneRelativePlacement.y + ", going LEFT"); }
+                powerPropulsion(TravelDirection.LEFT, 0.4);
+            } else if (stoneRelativePlacement.y - offset < 0.0) {
+                if (x % 100 == 0) { dbugThis("Position Y : " + stoneRelativePlacement.y + ", going RIGHT"); };
+                powerPropulsion(TravelDirection.RIGHT, 0.4);
+            }
+            justWait(800);
         }
         stopMoving();
         gotoHeading(0);
@@ -223,49 +217,67 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     }
 
 
-    private void getCloseEnoughToPickUpState() {
-        moveXInchesFromFrontObject(6.0, 10000, 0.5);
+    protected void getCloseEnoughToPickUpState() {
+        moveXInchesFromFrontObject(4.0, 10000, 0.5);
         currentState = STATE_pickUpStone;
         return;
     }
 
+    protected void pickUpStoneState() {
+        slideByTime(2000, -0.8);
+        closeClaw();
+        slideByTime(1000, 0.8);
 
-    private void pickUpStoneState() {
-        justWait(5000);
         currentState = STATE_travelToBuildSite;
+//        currentState = STATE_idle;
         return;
     }
 
+    protected void travelToBuildSiteState() {
+        // implement in alliance specific
+    }
 
-    private void travelToBuildSiteState() {
-        setCameraHorizontalPosition(0);
-        setCameraVerticalPosition(0.65);
+
+    protected void dropOffStoneState() {
+        gotoHeading(0);
+        openClaw();
         moveXInchesFromBackObject(7.0, 100000, 0.8);
-        gotoHeading(0);
-        moveRightByTime(6000, 0.8);
-        currentState = STATE_dropOffStone;
+        closeClaw();
+        openClaw();
+        slideByTime(1000, 0.8);
+        currentState = STATE_parkUnderBridge;
         return;
     }
 
+    protected void travelHomeState() {
+        // implement in alliance specific
+    }
 
-    private void dropOffStoneState() {
+    protected void parkUnderBridge() {
         gotoHeading(0);
-        justWait(5000);
-        currentState = STATE_travelHome;
+        moveXInchesFromBackObject(12.0, 5000,0.9);
+        moveXInchesFromRightObject(50.0, 10000,0.9);
+        moveXInchesFromLeftObject(50.0, 10000,0.9);
+        currentState = STATE_done;
         return;
     }
 
-    private void travelHomeState() {
-        gotoHeading(0);
-        moveLeftByTime(6000, 0.9);
-        moveXInchesFromLeftObject(6.0, 5000,0.8);
-        gotoHeading(0);
-        currentState = STATE_moveToStones;
-        return;
+    protected void openClaw() {
+        claw.setPosition(0);
     }
 
+    protected void closeClaw() {
+        claw.setPosition(0.9);
+    }
 
-    private void parkUnderBridge() {
+    protected void slideByTime(int ms, double power) {
 
+        double limit = runtime.milliseconds() + ms;
+
+        slide.setPower(power);
+        while (opModeIsActive() &&  runtime.milliseconds() < limit) {
+            idle();
+        }
+        slide.setPower(0.0);
     }
 }
