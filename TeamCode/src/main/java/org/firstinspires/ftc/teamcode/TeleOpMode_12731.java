@@ -30,6 +30,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
@@ -43,10 +46,11 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     private ElapsedTime runtime = new ElapsedTime();
 
     static final double     AUTONOMOUS_SPEED            = 0.6;
-    static final double     K                           = 0.2;
+    static final double     K                           = 0.8;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    private BotBase         botBase = null;
+    Servo servoClaw = null;
+    CRServo servoLinear = null;
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -67,6 +71,8 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
+        servoLinear  = hardwareMap.get(CRServo.class, "servoLinear");
+        servoClaw  = hardwareMap.get(Servo.class, "servoClaw");
         telemetry.update();
     }
 
@@ -112,7 +118,28 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         double forward      = -gamepad1.right_stick_y;
         double right        = gamepad1.right_stick_x;
         double clockwise    = gamepad1.left_stick_x;
+        double servoLinearOpen = gamepad2.right_trigger;
+        double servoLinearClose = -gamepad2.left_trigger;
 
+        if(gamepad2.right_trigger < 0.01 && gamepad2.left_trigger < 0.01){
+            servoLinear.setPower(0);
+        }
+        if(gamepad2.right_trigger > 0.01){
+            servoLinear.setPower(servoLinearOpen);
+        }
+
+        if(gamepad2.left_trigger > 0.01 && gamepad2.right_trigger < 0.01){
+            servoLinear.setPower(servoLinearClose);
+        }
+
+        if(gamepad2.right_bumper == true){
+            servoClaw.setPosition(0);
+
+        }
+
+        if(gamepad2.left_bumper == true && gamepad2.right_bumper != true){
+            servoClaw.setPosition(1);
+        }
 
         // Now add a tuning constant K for the “rotate” axis sensitivity.
         // Start with K=0, and increase it very slowly (do not exceed K=1)

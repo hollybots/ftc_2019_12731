@@ -2,13 +2,17 @@ package org.firstinspires.ftc.teamcode;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @Autonomous(name="Red Alliance Team 12731", group="1")
-public class Autonomous_12731new extends AutonomousOpModesBase {
+public class Autonomous_12731red extends AutonomousOpModesBase {
     private Servo servo = null;
     private DcMotor Coil = null;
+    Servo servoClaw = null;
+    CRServo servoLinear = null;
+    Servo servoCamera = null;
     // Sounds
     BotSounds botSounds = null;
 
@@ -25,8 +29,13 @@ public class Autonomous_12731new extends AutonomousOpModesBase {
          * SOUNDS
          */
         botSounds = new BotSounds(hardwareMap);
-        servo = hardwareMap.get(Servo.class, "servo");
-        Coil = hardwareMap.get(DcMotor.class, "Coil");
+        //servos
+        servoLinear  = hardwareMap.get(CRServo.class, "servoLinear");
+        servoClaw  = hardwareMap.get(Servo.class, "servoClaw");
+        servoCamera = hardwareMap.get(Servo.class,"camera_pan");
+
+        servoClaw.setPosition(0);
+        servoCamera.setPosition(4);
     }
 
     @Override
@@ -62,7 +71,7 @@ public class Autonomous_12731new extends AutonomousOpModesBase {
 
             dbugThis(isStalled() + "");
             moveForwardByTime(100);
-            moveRightByTime(6000);
+            moveRightByTime(1850);
             break;
         }
 

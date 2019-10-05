@@ -16,8 +16,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Disabled
 public class TeleOpModesBase extends OpMode {
 
-    protected BotBase botBase = new BotBase();
-
+    protected BotBase botBase;
 
     protected boolean DEBUG = true;
 
@@ -32,7 +31,10 @@ public class TeleOpModesBase extends OpMode {
     @Override
     public void init() {
 
+        botBase = new BotBase();
         botBase.init(hardwareMap);
+
+        dbugThis("here");
 
         botBase.getFrontLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         botBase.getFrontLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
