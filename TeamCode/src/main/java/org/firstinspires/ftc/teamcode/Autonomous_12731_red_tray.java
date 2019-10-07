@@ -21,7 +21,7 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
 
     protected void moveToTrayState() {
 
-        moveRightByTime(1850, 0.9);
+        moveXInchesFromRightObject(24.0, 10000, 1.0);
         moveForwardByTime(2312, 0.9);
         currentState = STATE_clampTray;
     }

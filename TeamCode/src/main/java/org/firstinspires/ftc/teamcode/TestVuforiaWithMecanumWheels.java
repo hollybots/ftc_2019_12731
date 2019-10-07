@@ -41,7 +41,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 @TeleOp(name="Test Mecanum & Vuforia", group="3")
-@Disabled
+//@Disabled
 public class TestVuforiaWithMecanumWheels extends TeleOpModesBase
 {
     static final double     AUTONOMOUS_SPEED            = 0.6;
@@ -94,6 +94,7 @@ public class TestVuforiaWithMecanumWheels extends TeleOpModesBase
             NAVIGATION
         */
         navigation  = new VuforiaNavigation(
+                botBase,
                 hardwareMap,
                 telemetry,
                 VUFORIA_KEY,

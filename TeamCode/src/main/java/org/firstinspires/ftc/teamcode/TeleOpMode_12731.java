@@ -45,7 +45,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     private ElapsedTime runtime = new ElapsedTime();
 
     static final double     AUTONOMOUS_SPEED            = 0.6;
-    static final double     K                           = 0.2;
+    static final double     K                           = 0.6;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
     CRServo slide                               = null;

@@ -81,7 +81,7 @@ public class TeleOpModesBase extends OpMode {
     void dbugThis(String s) {
 
         if ( DEBUG == true ) {
-            Log.d("OpModesBaseClass: ", s);
+            Log.d("TELEOP: ", s);
         }
     }
 

@@ -46,7 +46,11 @@ public class TestRangeSensors extends TeleOpModesBase
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
 
-    ModernRoboticsI2cRangeSensor frontSensor;
+    // Range Sensors
+    ModernRoboticsI2cRangeSensor distanceFront = null;
+    ModernRoboticsI2cRangeSensor distanceBack = null;
+    ModernRoboticsI2cRangeSensor distanceLeft = null;
+    ModernRoboticsI2cRangeSensor distanceRight = null;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -58,15 +62,17 @@ public class TestRangeSensors extends TeleOpModesBase
         super.init();
         telemetry.update();
 
+        /* ***********************************
+        RANGE SENSORS
+        */
+        distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
+        distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
+        distanceLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range_1");
+        distanceRight = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range_1");
+
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
-        telemetry.addData("Status", "Initializing the sensors");
-        telemetry.update();
-
-        frontSensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_0");
-
     }
 
 
@@ -125,21 +131,24 @@ public class TestRangeSensors extends TeleOpModesBase
             dbugThis("Going Back");
         }
 
-        if ( goingForward && tooClose(frontSensor) ) {
+        if ( goingForward && tooClose(distanceFront) ) {
 
             dbugThis("Going forward");
             forward = 0;
+            right = 0;
         }
 
-//        if ( goingRight && tooClose(rightSensor) ) {
-//            right = 0;
-//        }
-//        if ( goingLeft && tooClose(leftSensor) ) {
-//            right = 0;
-//        }
-//        if ( goingBack && tooClose(rearSensor) ) {
-//            right = 0;
-//        }
+        if ( goingRight && tooClose(distanceRight) ) {
+            forward = 0;
+            right = 0;
+        }
+        if ( goingLeft && tooClose(distanceLeft) ) {
+            right = 0;
+        }
+        if ( goingBack && tooClose(distanceBack) ) {
+            forward = 0;
+            right = 0;
+        }
 
 
         // Now add a tuning constant K for the “rotate” axis sensitivity.
@@ -194,7 +203,10 @@ public class TestRangeSensors extends TeleOpModesBase
 
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Motors", "front left (%.2f), front right (%.2f), rear left (%.2f), rear right (%.2f)", front_left, front_right, rear_left, rear_right);
+        telemetry.addData("Sensor Front : " , "" + distanceFront.getDistance(DistanceUnit.INCH));
+        telemetry.addData("Sensor Right : " , "" + distanceRight.getDistance(DistanceUnit.INCH));
+        telemetry.addData("Sensor Left : " , "" + distanceLeft.getDistance(DistanceUnit.INCH));
+        telemetry.addData("Sensor Back : " , "" + distanceBack.getDistance(DistanceUnit.INCH));
 
         telemetry.update();
     }

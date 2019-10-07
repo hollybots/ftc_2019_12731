@@ -97,6 +97,8 @@ public class VuforiaNavigation implements NavigationInterface {
     // active state
     private boolean active   = false;
 
+    private BotBase botBase;
+
 
 
     /**
@@ -111,18 +113,21 @@ public class VuforiaNavigation implements NavigationInterface {
      * @param cameraLeftDisplacement
      * @param cameraVerticalDisplacement
      */
-    public VuforiaNavigation(HardwareMap hardwareMap,
-                             Telemetry telemetry,
-                             String vuForiaKey,
-                             VuforiaLocalizer.CameraDirection cameraChoice,
-                             float cameraForwardDisplacement,
-                             float cameraLeftDisplacement,
-                             float cameraVerticalDisplacement,
-                             boolean phoneIsPortrait,
-                             boolean debug)
+    public VuforiaNavigation(
+            BotBase botBase,
+            HardwareMap hardwareMap,
+             Telemetry telemetry,
+             String vuForiaKey,
+             VuforiaLocalizer.CameraDirection cameraChoice,
+             float cameraForwardDisplacement,
+             float cameraLeftDisplacement,
+             float cameraVerticalDisplacement,
+             boolean phoneIsPortrait,
+             boolean debug)
     {
         this.DEBUG  = debug;
         this.telemetry = telemetry;
+        this.botBase = botBase;
 
         /*********************************************
 
@@ -358,6 +363,7 @@ public class VuforiaNavigation implements NavigationInterface {
 
             if (((VuforiaTrackableDefaultListener) trackable.getListener()).isVisible()) {
                 targetVisible = true;
+
                 OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackable.getListener()).getPose();
                 if (robotLocationTransform != null) {
                     lastStoneLocation = robotLocationTransform;
@@ -368,10 +374,12 @@ public class VuforiaNavigation implements NavigationInterface {
 
         // Provide feedback as to where the robot is located (if we know).
         if (targetVisible) {
+            botBase.stop();
             // express position (translation) of robot in inches.
             VectorF translation = lastStoneLocation.getTranslation();
             placement = new FieldPlacement(translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, 0);
             dbugThis("Target is visible. Placement Y : " + placement.y);
+
         }
         if (placement == null ) dbugThis("Returning null placement");
         return placement;

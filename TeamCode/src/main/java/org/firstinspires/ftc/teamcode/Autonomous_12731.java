@@ -39,10 +39,14 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected CRServo slide                               = null;
     protected Servo claw                                  = null;
     protected Servo rightPin                              = null;
-    protected Servo leftPin                              = null;
+    protected Servo leftPin                               = null;
 
     // Sounds
     protected BotSounds botSounds = null;
+
+    // alignment
+    protected static final double CAMERA_TO_CENTER               = 0.0;
+
 
     @Override
     public void initAutonomous() {
@@ -68,8 +72,16 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         /**
          * TRAY HOOK Mechanism
          */
-        rightPin                = hardwareMap.get(Servo.class, "claw");
-        leftPin                = hardwareMap.get(Servo.class, "claw");
+        try {
+            rightPin = hardwareMap.get(Servo.class, "right_pin");
+        } catch (Exception e) {
+            rightPin = null;
+        }
+        try {
+            leftPin = hardwareMap.get(Servo.class, "left_pin");
+        } catch (Exception e) {
+            leftPin = null;
+        }
     }
 
     @Override
@@ -79,9 +91,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
-        // Enable navigation system
-        navigation.activate();
 
         setCameraVerticalPosition(0.35);
 
@@ -120,7 +129,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
                 case STATE_moveToStones:
                     moveToStoneState();
                     break;
-
                 case STATE_scanForStone:
                     scanForStoneState();
                     break;
@@ -169,7 +177,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
             telemetry.update();
         }
 
-        navigation.stop();
+        vuMark.stop();
         stopMoving();
     }
 
@@ -178,9 +186,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
      */
     protected void moveToStoneState() {
 
-        openClaw();
-        slideByTime(1000, 0.8);
-        moveXInchesFromFrontObject(13.0, 10000, 0.9);
+        slide.setPower(-1.0);
+        moveXInchesFromFrontObject(11.0, 10000, 1.0);
         currentState = STATE_scanForStone;
         return;
     }
@@ -197,61 +204,90 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void alignWithStoneState() {
 
-        double offset = 0.0;
-        stopMoving();
-        dbugThis("Slowly looking for Stone");
-
-        int x = 0;
-
-        while (opModeIsActive()) {
-
-            x++;
-            stoneRelativePlacement = navigation.getSkyStone("Stone Target");
-            if ( stoneRelativePlacement == null ) {
-                continue;
-            }
-
-            if ( Math.abs(stoneRelativePlacement.y - offset) < 2.0  ) {
-                break;
-            }
-
-            if (Math.abs(stoneRelativePlacement.y - offset) > 35.0) {
-                break;
-            }
-
-            if (stoneRelativePlacement.y - offset < 0.0) {
-               dbugThis("Position Y : " + stoneRelativePlacement.y + ", going LEFT");
-                powerPropulsion(TravelDirection.LEFT, 0.25);
-            } else if (stoneRelativePlacement.y - offset > 0.0) {
-                dbugThis("Position Y : " + stoneRelativePlacement.y + ", going RIGHT");
-                powerPropulsion(TravelDirection.RIGHT, 0.25);
-            }
-            justWait(200);
+        if ( stoneRelativePlacement == null ) {
+            currentState = STATE_done;
+            dbugThis("Failed");
+            return;
         }
-        stopMoving();
-        gotoHeading(0);
+//
+//        else if (true) {
+//            currentState = STATE_done;
+//            dbugThis("Last known position : "  +  stoneRelativePlacement.y );
+//            return;
+//        }
 
-        if (stoneRelativePlacement == null) {
-            currentState = STATE_scanForStone;
+        // This is the distance from the camera to the actual part of the robot that must align with the center of the Vumark
+        double offset = CAMERA_TO_CENTER;
+
+
+        double delta = stoneRelativePlacement.y - offset;
+        double absDelta = Math.abs(delta);
+
+        if (absDelta < 1.0) {
+            currentState = STATE_getCloseEnoughToPickup;
+            dbugThis("Found the bugger!!");
             return;
         }
 
+        // First we do a gross movement just to get closer
+        if (delta < 0) {
+            moveLeftByTime(timeToMoveInMs(absDelta), 0.9);
+        } else {
+            moveRightByTime(timeToMoveInMs(absDelta), 0.9);
+        }
+        stopMoving();
+
+        //
+        //  Then we slow down to find the middle of the stone
+        dbugThis("Slowly looking for middle of Stone");
+        stoneRelativePlacement = vuMark.find();
+        if (stoneRelativePlacement == null) {
+            currentState = STATE_done;
+            dbugThis("Failed");
+            return;
+        }
+
+        delta = stoneRelativePlacement.y - offset;
+        absDelta = Math.abs(delta);
+        dbugThis("New Delta: " + delta);
+
+        while (absDelta > 1.0 && opModeIsActive()) {
+
+            if (delta < 0) {
+                powerPropulsion(TravelDirection.LEFT, 0.3);
+            } else {
+                powerPropulsion(TravelDirection.RIGHT, 0.3);
+            }
+            justWait(1000);
+            stoneRelativePlacement = vuMark.find();
+            if (stoneRelativePlacement == null) {
+                currentState = STATE_done;
+                dbugThis("Failed");
+                return;
+            }
+            delta = stoneRelativePlacement.y - offset;
+            absDelta = Math.abs(delta);
+
+            dbugThis("New Delta: " + delta);
+        }
         currentState = STATE_getCloseEnoughToPickup;
         return;
     }
 
 
     protected void getCloseEnoughToPickUpState() {
-        moveXInchesFromFrontObject(4.0, 10000, 0.5);
+        moveXInchesFromFrontObject(2.0, 10000, 0.5);
         currentState = STATE_pickUpStone;
+
         return;
     }
 
     protected void pickUpStoneState() {
-        slideByTime(2000, -0.8);
+        slide.setPower(0.0);
+        slide.setPower(1.0);
         closeClaw();
-        slideByTime(1000, 0.8);
-
+        justWait(500);
+        slide.setPower(0);
         currentState = STATE_travelToBuildSite;
 //        currentState = STATE_idle;
         return;
@@ -265,10 +301,10 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void dropOffStoneState() {
         gotoHeading(0);
         openClaw();
-        moveXInchesFromBackObject(7.0, 100000, 0.8);
+        moveXInchesFromBackObject(12.0, 100000, 1.0);
         closeClaw();
         openClaw();
-        slideByTime(1000, 0.8);
+        slideByTime(2000, 1.0);
         currentState = STATE_parkUnderBridge;
         return;
     }
@@ -290,8 +326,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void clampTrayState() {
 
-        rightPin.setPosition(1.0);
-        leftPin.setPosition(1.0);
+        if (rightPin != null) { rightPin.setPosition(1.0);}
+        if (leftPin != null) { leftPin.setPosition(1.0);}
         currentState = STATE_moveTrayBack;
     }
 
@@ -299,8 +335,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void moveTrayBackState() {
 
         moveXInchesFromBackObject(7.0, 100000, 0.8);
-        rightPin.setPosition(0.0);
-        leftPin.setPosition(0.0);
+        if (rightPin != null) { rightPin.setPosition(0.0);}
+        if (leftPin != null) { leftPin.setPosition(0.0);}
         currentState = STATE_parkUnderBridge;
     }
 
@@ -323,6 +359,4 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         }
         slide.setPower(0.0);
     }
-
-
 }

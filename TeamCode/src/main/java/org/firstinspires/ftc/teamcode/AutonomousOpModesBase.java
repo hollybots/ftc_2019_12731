@@ -157,11 +157,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /* Propulsion and basic hardware
      */
-    protected BotBase botBase = new BotBase();
+    public BotBase botBase = new BotBase();
 
     // We delegate navigation to this object
     protected NavigationInterface navigation;
-
+    protected VuMarkIdentification vuMark  = null;
 
     /**
      * Hardware classes
@@ -248,18 +248,31 @@ public class AutonomousOpModesBase extends LinearOpMode {
         gyro.initialize(gyroParameters);
 
 
+//        /* ************************************
+//            NAVIGATION
+//         */
+//        navigation  = new VuforiaNavigation(
+//            botBase,
+//            hardwareMap,
+//            telemetry,
+//            VUFORIA_KEY,
+//            CAMERA_CHOICE,
+//            CAMERA_FORWARD_DISPLACEMENT,
+//            CAMERA_LEFT_DISPLACEMENT,
+//            CAMERA_VERTICAL_DISPLACEMENT,
+//            PHONE_IS_IN_PORTRAIT,
+//            this.DEBUG
+//        );
+
         /* ************************************
             NAVIGATION
          */
-        navigation  = new VuforiaNavigation(
+        vuMark  = new VuMarkIdentification(
+            botBase,
             hardwareMap,
             telemetry,
             VUFORIA_KEY,
             CAMERA_CHOICE,
-            CAMERA_FORWARD_DISPLACEMENT,
-            CAMERA_LEFT_DISPLACEMENT,
-            CAMERA_VERTICAL_DISPLACEMENT,
-            PHONE_IS_IN_PORTRAIT,
             this.DEBUG
         );
 
@@ -295,86 +308,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
 
-    /*****************************************************************
-     * HIGH LEVEL AUTONOMOUS MOVEMENT
-     */
-
-
-    /**
-     * gotoPlacement()
-     *
-     * This function takes in a FieldPlacement object and position the robot according the x,y,orientation values
-     * in that object.
-     *
-     * @param  destination                      : x,y, orientation values (see the FieldPlacement class)
-     */
-    protected void gotoPlacement(FieldPlacement destination) {
-
-        double translation_x;
-        double translation_y;
-        double demandedTheta;
-        double theta;
-
-        realign();
-
-        // Keeping the robot oriented north, we are going to make it to our destination by travelling at angle
-
-        dbugThis("** Entering gotoPlacement **");
-        dbugThis(String.format("Current position X: %2.2f", botCurrentPlacement.x));
-        dbugThis(String.format("Current position y: %2.2f", botCurrentPlacement.y));
-
-        dbugThis(String.format("Target position X: %2.2f", destination.x));
-        dbugThis(String.format("Target position y: %2.2f", destination.y));
-
-        // pid for approaching position
-        while ( opModeIsActive() && !isPositionWithinAcceptableTargetRange(botCurrentPlacement, destination) ) {
-
-            // if robot gets stalled moving in the given direction, we have to try to release it
-            if ( isStalled() ) {
-                nudgeRobot();
-            }
-
-            translation_x = destination.x - botCurrentPlacement.x;
-            translation_y = destination.y - botCurrentPlacement.y;
-            demandedTheta = Math.atan2(translation_y, translation_x);
-            theta = (Math.PI / 2.0 - demandedTheta) - botCurrentPlacement.orientation;
-
-            dbugThis(String.format("Translation Y: %2.2f",translation_y));
-            dbugThis(String.format("Translation X: %2.2f",translation_x));
-            dbugThis(String.format("Diagonal Displacement: %2.2f", demandedTheta));
-
-            moveAtAngle(theta, DRIVE_SPEED);
-            botCurrentPlacement = navigation.getPlacement();
-        }
-        stopMoving();
-
-        telemetry.addData("Status", "Robot Initialized");
-        telemetry.update();
-    }
-
-
-
-
     /******************************
      * PROPULSION HELPERS
      */
-
-
-    /**
-     * realign()
-     */
-    protected void realign() {
-
-        int tries = 0;
-
-        botCurrentPlacement = navigation.getPlacement();
-        while ( botCurrentPlacement == null && tries++ < FIND_NAVIGATION_BEACON_MAX_RETRY  &&  opModeIsActive() ) {
-
-            // if we were not able to orient ourselves, we have to move a bit
-            nudgeRobot();
-            justWait(500);
-        }
-    }
 
 
     /**
@@ -812,25 +748,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         return false;
 
-//        // check every 2s if position has changed significantly (current-previous > 1in.).  If it did, raise a flag
-//        if ((int) runtime.seconds() % 2 == 0) {
-//            if (!hasMovedSignificantly(botPreviousPlacement, botCurrentPlacement)) {
-//                stallProbability++;
-//            } else {
-//                stallProbability = 0;
-//            }
-//
-//            botPreviousPlacement = botCurrentPlacement;
-//            botCurrentPlacement = navigation.getPlacement();
-//        }
-//
-//        if ( stallProbability > ATTEMPTS_BEFORE_STALL_DETECTED ) {
-//
-//
-//            return true;
-//        }
-//
-//        return false;
     }
 
 
@@ -1062,5 +979,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
 //                break;
 //        }
         return false;
+    }
+
+
+    public int timeToMoveInMs(double displacementInInches) {
+        return (int) (1464 * displacementInInches / 13.0);
     }
 }
