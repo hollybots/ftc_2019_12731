@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -12,6 +13,9 @@ public class BotBase {
     static final double PROPULSION_DRIVE_GEAR_REDUCTION     = 1.3;                  // This is < 1.0 if geared UP > 1 we are gering down (the small drives the big)
     static final double WHEEL_CIRCUMFERENCE                 = 4.0 * 3.14159;        // For figuring circumference
     static final double PROPULSION_ENCODER_COUNTS_PER_INCH  = (TORQUENADO_COUNTS_PER_MOTOR_REV * PROPULSION_DRIVE_GEAR_REDUCTION) / WHEEL_CIRCUMFERENCE;
+
+
+    private BlinkinBling bling                              = null;
 
 
     // Timekeeper OpMode members.
@@ -51,8 +55,9 @@ public class BotBase {
         rearRightDrive.setDirection(DcMotor.Direction.REVERSE);
 
         /* ***********************************
-            SERVOS
+            LIGHTS
          */
+        bling = new BlinkinBling(hardwareMap);
 
     }
 
@@ -77,5 +82,14 @@ public class BotBase {
 
     protected DcMotor getRearLeftDrive() {
         return rearLeftDrive;
+    }
+
+    protected BlinkinBling getBling() { return bling;}
+
+
+    public void setBling(double mode) {
+        if ( bling != null ) {
+            bling.setBlinkinPattern(mode);
+        }
     }
 }

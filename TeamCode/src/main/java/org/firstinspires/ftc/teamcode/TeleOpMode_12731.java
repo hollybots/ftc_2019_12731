@@ -48,10 +48,15 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     static final double     K                           = 0.6;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    CRServo slide                               = null;
-    Servo claw                                  = null;
+    protected CRServo slide                               = null;
+    protected Servo claw                                  = null;
+    protected Servo rightPin                              = null;
+    protected Servo leftPin                               = null;
 
     boolean use2Controllers                             = false;
+
+    boolean isClamping                                  = false;
+    boolean waitForClampingButtonRelease                = false;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -67,6 +72,10 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         /* Claw Mechanism */
         slide               = hardwareMap.get(CRServo.class, "slide");
         claw                = hardwareMap.get(Servo.class, "claw");
+        rightPin            = hardwareMap.get(Servo.class, "right_pin");
+        leftPin             = hardwareMap.get(Servo.class, "left_pin");
+
+        botBase.setBling(0.7745);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -120,6 +129,10 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         double slideIn          = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
         boolean clawDown         = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
         boolean clawUp           = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
+
+        boolean isPressedClampingButton     = gamepad1.right_stick_button;
+        boolean toggledClamp                = false;
+
 
 
         // Now add a tuning constant K for the “rotate” axis sensitivity.
@@ -183,6 +196,33 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             slide.setPower(0.0);
         }
 
+        // Check for a toggle state -> needs to be Clamp button must be pressed and released
+        if (isPressedClampingButton) {
+            waitForClampingButtonRelease = true;
+        }
+        else if (waitForClampingButtonRelease) {
+            waitForClampingButtonRelease = false;
+            toggledClamp = true;
+        }
+
+        if ( toggledClamp && isClamping) {
+            isClamping = false;
+        }
+        else if ( toggledClamp && !isClamping) {
+            isClamping = true;
+        }
+        if ( isClamping ) {
+            rightPin.setPosition(0.6);
+            leftPin.setPosition(0.3);
+            botBase.setBling(0.6545);
+        }
+        else {
+            rightPin.setPosition(0.9);
+            leftPin.setPosition(0.0);
+            botBase.setBling(0.7745);
+        }
+
+
         // Send calculated power to wheels
         botBase.getFrontLeftDrive().setPower(front_left);
         botBase.getFrontRightDrive().setPower(front_right);
@@ -220,4 +260,5 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     private void slideIn() {
         slide.setPower(0.5);
     }
+
 }

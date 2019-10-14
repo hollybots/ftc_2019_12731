@@ -67,11 +67,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
     }
 
 
-
-
-
     protected void travelToBuildSiteState() {
-        setCameraVerticalPosition(0.55);
         moveXInchesFromBackObject(12.0, 100000, 0.8);
         gotoHeading(0);
         moveRightByTime(4800, 1.0);

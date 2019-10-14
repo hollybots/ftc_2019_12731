@@ -158,9 +158,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
     /* Propulsion and basic hardware
      */
     public BotBase botBase = new BotBase();
-
-    // We delegate navigation to this object
-    protected NavigationInterface navigation;
     protected VuMarkIdentification vuMark  = null;
 
     /**
@@ -248,24 +245,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
         gyro.initialize(gyroParameters);
 
 
-//        /* ************************************
-//            NAVIGATION
-//         */
-//        navigation  = new VuforiaNavigation(
-//            botBase,
-//            hardwareMap,
-//            telemetry,
-//            VUFORIA_KEY,
-//            CAMERA_CHOICE,
-//            CAMERA_FORWARD_DISPLACEMENT,
-//            CAMERA_LEFT_DISPLACEMENT,
-//            CAMERA_VERTICAL_DISPLACEMENT,
-//            PHONE_IS_IN_PORTRAIT,
-//            this.DEBUG
-//        );
-
         /* ************************************
-            NAVIGATION
+            VUMARK
          */
         vuMark  = new VuMarkIdentification(
             botBase,
@@ -302,15 +283,12 @@ public class AutonomousOpModesBase extends LinearOpMode {
         setCameraVerticalPosition(0.6);
         setCameraHorizontalPosition(0.5);
 
+
+
         telemetry.addData("Status", "Robot Initialized");
         telemetry.update();
 
     }
-
-
-    /******************************
-     * PROPULSION HELPERS
-     */
 
 
     /**
@@ -898,23 +876,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
         Random random = new Random();
         int x = random.nextInt(clazz.getEnumConstants().length);
         return clazz.getEnumConstants()[x];
-    }
-
-
-    /**
-     * nudgeRobot()
-     *
-     * Move the robot or the camera, tying to find a beacon
-     */
-    public void nudgeRobot() {
-
-        if (navigation.getType() == NavigationTypesEnum.VUFORIA) {
-            moveCamera();
-        }
-
-        else if (navigation.getType() == NavigationTypesEnum.SENSORS) {
-            move(randomEnum(TravelDirection.class), 800, 0, true);
-        }
     }
 
 

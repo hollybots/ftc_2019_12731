@@ -47,6 +47,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     // alignment
     protected static final double CAMERA_TO_CENTER               = 0.0;
 
+    protected static final double BLING_MODE_CLAMP               = 0.6545;
+
 
     @Override
     public void initAutonomous() {
@@ -82,6 +84,11 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         } catch (Exception e) {
             leftPin = null;
         }
+
+        /* **********************************
+           LIGHTS
+        */
+        botBase.setBling(0.7745);
     }
 
     @Override
@@ -129,6 +136,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
                 case STATE_moveToStones:
                     moveToStoneState();
                     break;
+
                 case STATE_scanForStone:
                     scanForStoneState();
                     break;
@@ -328,6 +336,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         if (rightPin != null) { rightPin.setPosition(1.0);}
         if (leftPin != null) { leftPin.setPosition(1.0);}
+        botBase.setBling(BLING_MODE_CLAMP);
         currentState = STATE_moveTrayBack;
     }
 
