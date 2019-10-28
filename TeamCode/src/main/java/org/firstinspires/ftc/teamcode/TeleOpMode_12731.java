@@ -53,7 +53,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     protected Servo rightPin                              = null;
     protected Servo leftPin                               = null;
 
-    boolean use2Controllers                             = false;
+    boolean use2Controllers                             = true;
 
     boolean isClamping                                  = false;
     boolean waitForClampingButtonRelease                = false;
@@ -67,13 +67,8 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         telemetry.addData("Status", "Initializing the base...");
         telemetry.update();
 
+        // Init Botbase and Bottop
         super.init();
-
-        /* Claw Mechanism */
-        slide               = hardwareMap.get(CRServo.class, "slide");
-        claw                = hardwareMap.get(Servo.class, "claw");
-        rightPin            = hardwareMap.get(Servo.class, "right_pin");
-        leftPin             = hardwareMap.get(Servo.class, "left_pin");
 
         botBase.setBling(0.7745);
 
@@ -117,6 +112,10 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         /*
         Read gamepad value
          */
+
+        /**
+         * INPUT GAMEPAD
+         */
         // ... or for two 2-axis joysticks do this (Halo):
         // push joystick1 forward to go forward
         // push joystick1 to the right to strafe right
@@ -125,14 +124,16 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         double right        = gamepad1.right_stick_x;
         double clockwise    = gamepad1.left_stick_x;
 
-        double slideOut         = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
-        double slideIn          = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
-        boolean clawDown         = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
-        boolean clawUp           = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
+        double slideUp          = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
+        double slideDown        = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
+        boolean clawDown        = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
+        boolean clawUp          = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
+
+        double arm                  = -gamepad2.right_stick_y;
+        double linearMotion         = -gamepad2.left_stick_y;
 
         boolean isPressedClampingButton     = gamepad1.right_stick_button;
         boolean toggledClamp                = false;
-
 
 
         // Now add a tuning constant K for the “rotate” axis sensitivity.
@@ -178,24 +179,46 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             rear_right /= max;
         }
 
+        /**
+         * OUTPUT LINEAR MOTION
+         */
+        botTop.coil(linearMotion);
 
+        /**
+         * OUTPUT SWIVEL ARM
+         */
+        botTop.swing(arm);
+
+
+
+        /**
+         * OUTPUT CLAW
+         */
         if (clawDown) {
-            closeClaw();
+            botTop.closeClaw();
         }
         else if (clawUp) {
-            openClaw();
+            botTop.openClaw();
         }
 
-        if (slideOut > 0) {
-            slide.setPower(-0.5);
+
+        /**
+         * OUTPUT SLIDE
+         */
+        if (slideUp > 0) {
+            botTop.slideUp();
         }
-        else if (slideIn > 0) {
-            slide.setPower(0.5);
+        else if (slideDown > 0) {
+            botTop.slideDown();
         }
         else {
-            slide.setPower(0.0);
+            botTop.stopSlide();
         }
 
+
+        /**
+         * OUTPUT CLAMP
+         */
         // Check for a toggle state -> needs to be Clamp button must be pressed and released
         if (isPressedClampingButton) {
             waitForClampingButtonRelease = true;
@@ -212,16 +235,18 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             isClamping = true;
         }
         if ( isClamping ) {
-            rightPin.setPosition(0.6);
-            leftPin.setPosition(0.3);
+
+            botTop.clampOn();
             botBase.setBling(0.6545);
         }
         else {
-            rightPin.setPosition(0.9);
-            leftPin.setPosition(0.0);
+            botTop.clampRelease();
             botBase.setBling(0.7745);
         }
 
+        /**
+         * OUTPUT PROPULSION
+         */
 
         // Send calculated power to wheels
         botBase.getFrontLeftDrive().setPower(front_left);
@@ -242,23 +267,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void stop() {
         super.stop();
-    }
-
-
-    private void openClaw() {
-        claw.setPosition(0);
-    }
-
-    private void closeClaw() {
-        claw.setPosition(0.9);
-    }
-
-    private void slideOut() {
-        slide.setPower(-0.5);
-    }
-
-    private void slideIn() {
-        slide.setPower(0.5);
     }
 
 }

@@ -5,4 +5,7 @@ public enum TravelDirection {
     BACKWARD,
     RIGHT,
     LEFT,
+    UP,
+    DOWN,
+    IDLE
 }

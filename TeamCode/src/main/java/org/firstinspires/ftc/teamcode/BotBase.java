@@ -33,7 +33,7 @@ public class BotBase {
      *
      *    Configure the Hardware according to the Team Hardware Spreadsheet.
      */
-    void init(HardwareMap hardwareMap) {
+     BotBase(HardwareMap hardwareMap) {
 
 
         /* ************************************
@@ -50,9 +50,20 @@ public class BotBase {
         // Most robots need the motor on one side to be reversed to drive forward
         // Reverse the motor that runs backwards when connected directly to the battery
         frontLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        frontLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         frontRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        frontRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         rearLeftDrive.setDirection(DcMotor.Direction.FORWARD);
+        rearLeftDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rearLeftDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         rearRightDrive.setDirection(DcMotor.Direction.REVERSE);
+        rearRightDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rearRightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         /* ***********************************
             LIGHTS

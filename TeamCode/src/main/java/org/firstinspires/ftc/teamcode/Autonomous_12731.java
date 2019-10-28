@@ -35,11 +35,14 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected int currentState                                  = STATE_idle;
 
-    protected FieldPlacement stoneRelativePlacement       = null;
-    protected CRServo slide                               = null;
-    protected Servo claw                                  = null;
-    protected Servo rightPin                              = null;
-    protected Servo leftPin                               = null;
+    protected FieldPlacement stoneRelativePlacement             = null;
+
+
+
+//    protected CRServo slide                               = null;
+//    protected Servo claw                                  = null;
+//    protected Servo rightPin                              = null;
+//    protected Servo leftPin                               = null;
 
     // Sounds
     protected BotSounds botSounds = null;
@@ -56,34 +59,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         DEBUG = true;
         super.initAutonomous();
 
-        /**
-         * Add everything that is NOT Sensors or Propulsion motors
-         */
-
-        /**
-         * SOUNDS
-         */
-        botSounds = new BotSounds(hardwareMap);
-
-        /**
-         * CLAW Mechanism
-         */
-        slide               = hardwareMap.get(CRServo.class, "slide");
-        claw                = hardwareMap.get(Servo.class, "claw");
-
-        /**
-         * TRAY HOOK Mechanism
-         */
-        try {
-            rightPin = hardwareMap.get(Servo.class, "right_pin");
-        } catch (Exception e) {
-            rightPin = null;
-        }
-        try {
-            leftPin = hardwareMap.get(Servo.class, "left_pin");
-        } catch (Exception e) {
-            leftPin = null;
-        }
 
         /* **********************************
            LIGHTS
@@ -194,7 +169,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
      */
     protected void moveToStoneState() {
 
-        slide.setPower(-1.0);
+        botTop.slideUp();
         moveXInchesFromFrontObject(11.0, 10000, 1.0);
         currentState = STATE_scanForStone;
         return;
@@ -291,11 +266,11 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     }
 
     protected void pickUpStoneState() {
-        slide.setPower(0.0);
-        slide.setPower(1.0);
-        closeClaw();
+        botTop.stopSlide();
+        botTop.slideUp();
+        botTop.closeClaw();
         justWait(500);
-        slide.setPower(0);
+        botTop.stopSlide();
         currentState = STATE_travelToBuildSite;
 //        currentState = STATE_idle;
         return;
@@ -308,10 +283,10 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void dropOffStoneState() {
         gotoHeading(0);
-        openClaw();
+        botTop.openClaw();
         moveXInchesFromBackObject(12.0, 100000, 1.0);
-        closeClaw();
-        openClaw();
+        botTop.closeClaw();
+        botTop.openClaw();
         slideByTime(2000, 1.0);
         currentState = STATE_parkUnderBridge;
         return;
@@ -322,20 +297,13 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     }
 
 
-
-    protected void openClaw() {
-        claw.setPosition(0);
-    }
-
-
     protected void moveToTrayState() {
         // implement in alliance specific
     }
 
     protected void clampTrayState() {
 
-        if (rightPin != null) { rightPin.setPosition(1.0);}
-        if (leftPin != null) { leftPin.setPosition(1.0);}
+        botTop.clampOn();
         botBase.setBling(BLING_MODE_CLAMP);
         currentState = STATE_moveTrayBack;
     }
@@ -344,8 +312,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void moveTrayBackState() {
 
         moveXInchesFromBackObject(7.0, 100000, 0.8);
-        if (rightPin != null) { rightPin.setPosition(0.0);}
-        if (leftPin != null) { leftPin.setPosition(0.0);}
+        botTop.clampRelease();
         currentState = STATE_parkUnderBridge;
     }
 
@@ -354,18 +321,14 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     }
 
 
-    protected void closeClaw() {
-        claw.setPosition(0.9);
-    }
-
-    protected void slideByTime(int ms, double power) {
+    public void slideByTime(int ms, double power) {
 
         double limit = runtime.milliseconds() + ms;
 
-        slide.setPower(power);
+        botTop.getSlide().setPower(power);
         while (opModeIsActive() &&  runtime.milliseconds() < limit) {
             idle();
         }
-        slide.setPower(0.0);
+        botTop.getSlide().setPower(0.0);
     }
 }

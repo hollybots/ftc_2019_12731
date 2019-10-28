@@ -18,6 +18,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class TeleOpModesBase extends OpMode {
 
     protected BotBase botBase;
+    protected BotTop  botTop;
 
     Servo camera_pan_vertical = null;
     double cameraPanVerticalPosition        = 0;
@@ -37,20 +38,8 @@ public class TeleOpModesBase extends OpMode {
     @Override
     public void init() {
 
-        botBase = new BotBase();
-        botBase.init(hardwareMap);
-
-        botBase.getFrontLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getFrontLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        botBase.getFrontRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getFrontRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        botBase.getRearLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getRearLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        botBase.getRearRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getRearRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        botBase     = new BotBase(hardwareMap);
+        botTop      = new BotTop(hardwareMap);
 
         try {
             camera_pan_vertical = hardwareMap.get(Servo.class, "camera_pan_vertical");

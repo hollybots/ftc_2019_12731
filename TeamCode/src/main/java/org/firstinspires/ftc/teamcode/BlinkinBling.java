@@ -15,12 +15,12 @@ public class BlinkinBling  {
 
     public BlinkinBling(HardwareMap hardwareMap)
     {
-//        try {
+        try {
             blinkinModule = hardwareMap.get(Servo.class, "blinkin");
-//        } catch (Exception e) {
-//            blinkinModule = null;
-//            Log.d("TELEOP: ", "not null!!!");
-//        }
+        } catch (Exception e) {
+            blinkinModule = null;
+            Log.d("TELEOP: ", "not null!!!");
+        }
     }
 
     public boolean isActive() {

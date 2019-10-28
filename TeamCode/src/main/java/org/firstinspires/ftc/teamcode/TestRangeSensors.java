@@ -31,6 +31,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
+
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 /**
@@ -52,6 +54,11 @@ public class TestRangeSensors extends TeleOpModesBase
     ModernRoboticsI2cRangeSensor distanceLeft = null;
     ModernRoboticsI2cRangeSensor distanceRight = null;
 
+    DigitalChannel swingLimitUp = null;
+    DigitalChannel swingLimitDown = null;
+    DigitalChannel coilLimitUp = null;
+    DigitalChannel coilLimitDown = null;
+
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -69,6 +76,22 @@ public class TestRangeSensors extends TeleOpModesBase
         distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
         distanceLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range_1");
         distanceRight = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range_1");
+
+
+            /* ************************************
+        LIMIT SWITCHES
+    */
+
+
+
+        /**
+         * LIMIT Switches for safety
+         */
+        swingLimitUp                         = hardwareMap.get(DigitalChannel.class, "swing_limit_up");
+        swingLimitDown                       = hardwareMap.get(DigitalChannel.class, "swing_limit_down");
+//        coilLimitUp                          = hardwareMap.get(DigitalChannel.class, "coil_limit_up");
+//        coilLimitDown                        = hardwareMap.get(DigitalChannel.class, "coil_limit_down");
+
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -207,6 +230,10 @@ public class TestRangeSensors extends TeleOpModesBase
         telemetry.addData("Sensor Right : " , "" + distanceRight.getDistance(DistanceUnit.INCH));
         telemetry.addData("Sensor Left : " , "" + distanceLeft.getDistance(DistanceUnit.INCH));
         telemetry.addData("Sensor Back : " , "" + distanceBack.getDistance(DistanceUnit.INCH));
+
+        // Show the elapsed game time and wheel power.
+        telemetry.addData("Arm up : " , "" + swingLimitUp.getState());
+        telemetry.addData("Arm down : " , "" + swingLimitDown.getState());
 
         telemetry.update();
     }

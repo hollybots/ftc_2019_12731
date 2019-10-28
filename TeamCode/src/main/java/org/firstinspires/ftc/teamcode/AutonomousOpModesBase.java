@@ -53,6 +53,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 
+
+
 import java.util.List;
 import java.util.Random;
 
@@ -157,14 +159,19 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /* Propulsion and basic hardware
      */
-    public BotBase botBase = new BotBase();
+    public BotBase botBase              = null;
+    public BotTop botTop                = null;
+
+    /* Vumaark spotting
+     */
     protected VuMarkIdentification vuMark  = null;
 
     /**
      * Hardware classes
      */
 
-    // integrated IMU
+
+    // IMU
     protected BNO055IMU gyro = null;
 
     // Range Sensors
@@ -205,25 +212,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     protected void initAutonomous() {
 
-        botBase.init(hardwareMap);
-
-        /* DC MOtors with mecanum wheels, we are not using the encoders at all */
-        botBase.getFrontRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getFrontRightDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        botBase.getFrontRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        botBase.getFrontLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getFrontLeftDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        botBase.getFrontLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        botBase.getRearRightDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getRearRightDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        botBase.getRearRightDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        botBase.getRearLeftDrive().setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        botBase.getRearLeftDrive().setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        botBase.getRearLeftDrive().setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
+        botBase     = new BotBase(hardwareMap);
+        botTop      = new BotTop(hardwareMap);
 
         /*********************       GYRO        *********************** */
         // Set up the parameters with which we will use our IMU. Note that integration
@@ -282,8 +272,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         setCameraVerticalPosition(0.6);
         setCameraHorizontalPosition(0.5);
-
-
 
         telemetry.addData("Status", "Robot Initialized");
         telemetry.update();
