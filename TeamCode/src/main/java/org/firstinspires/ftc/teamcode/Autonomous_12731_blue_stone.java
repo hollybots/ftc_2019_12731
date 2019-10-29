@@ -31,10 +31,9 @@ public class Autonomous_12731_blue_stone extends Autonomous_12731 {
 
         stoneRelativePlacement = vuMark.find();
         if (stoneRelativePlacement != null ) {
-            dbugThis("Stopping all motion");
             stopMoving();
             currentState = STATE_alignWithStone;
-            dbugThis(String.format("Pos (in)  : {X, Y} = %.1f, %.1f",
+            dbugThis(String.format("Found the stone at Pos (in)  : {X, Y} = %.1f, %.1f",
                     stoneRelativePlacement.x, stoneRelativePlacement.y));
             return;
         }
@@ -47,7 +46,7 @@ public class Autonomous_12731_blue_stone extends Autonomous_12731 {
             stoneRelativePlacement = vuMark.find();
             if (stoneRelativePlacement != null) {
                 currentState = STATE_alignWithStone;
-                dbugThis(String.format("Pos (in)  : {X, Y} = %.1f, %.1f",
+                dbugThis(String.format("Found the stone at Pos (in)  : {X, Y} = %.1f, %.1f",
                         stoneRelativePlacement.x, stoneRelativePlacement.y));
                 return;
             }

@@ -294,7 +294,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && !onHeading(TURNING_SPEED, finalTheta, P_TURN_COEFF)) {
-            idle();
+
+            autonomousIdleTasks();
         }
 
         justWait(0.5);
@@ -326,7 +327,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && !onHeading(TURNING_SPEED, angle, P_TURN_COEFF)) {
 
-            idle();
+            autonomousIdleTasks();
         }
 
         justWait(0.5);
@@ -442,10 +443,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
             runtime.milliseconds() < limit &&
                     distanceLeft != null && distanceLeft.getDistance(DistanceUnit.INCH) > x
         ) {
+
+            autonomousIdleTasks();
 //            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
 //            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
 //            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
-            idle();
         }
 
         stopMoving();
@@ -475,10 +477,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
             runtime.milliseconds() < limit &&
                     distanceRight != null && distanceRight.getDistance(DistanceUnit.INCH) > x
         ) {
+            autonomousIdleTasks();
 //            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
 //            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
 //            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
-            idle();
         }
 
         stopMoving();
@@ -507,10 +509,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
             runtime.milliseconds() < limit &&
             distanceFront != null && distanceFront.getDistance(DistanceUnit.INCH) > x
         ) {
+            autonomousIdleTasks();
 //            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
 //            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
 //            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
-            idle();
         }
 
         stopMoving();
@@ -539,10 +541,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
             runtime.milliseconds() < limit &&
             distanceBack != null && distanceBack.getDistance(DistanceUnit.INCH) > x
         ) {
+            autonomousIdleTasks();
 //            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
 //            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
 //            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
-            idle();
         }
 
         stopMoving();
@@ -577,7 +579,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             runtime.milliseconds() < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
-            idle();
+            autonomousIdleTasks();
         }
 //
 //        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
@@ -882,8 +884,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         // keep looping while we are still active, and not on heading.
         while (opModeIsActive() && runtime.milliseconds() < limit  ) {
-            idle();
-            telemetry.update();
+
+            autonomousIdleTasks();
         }
     }
 
@@ -928,6 +930,13 @@ public class AutonomousOpModesBase extends LinearOpMode {
 //                break;
 //        }
         return false;
+    }
+
+
+    protected void autonomousIdleTasks() {
+
+        botTop.checkAllLimitSwitches();
+        idle();
     }
 
 

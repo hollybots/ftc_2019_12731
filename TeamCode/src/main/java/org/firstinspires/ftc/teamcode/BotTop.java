@@ -23,14 +23,18 @@ public class BotTop {
 
 
     static final double SPEED_COIL                          = 0.5;
-    static final int    COIL_UP                             = 1;
-    static final int    COIL_DOWN                           = -1;
-    static final int    COIL_IDLE                           = 0;
+    static final int    COIL_UP_DIRECTION                   = 1;
+    static final int    COIL_DOWN_DIRECTION                 = -1;
+    static final double COIL_UP_COMMAND                     = -0.99;
+    static final double COIL_DOWN_COMMAND                   = 0.99;
+    static final int    COIL_IDLE_DIRECTION                  = 0;
 
     static final double SPEED_SWING                         = 0.2;
-    static final int    SWING_UP                            = -1;
-    static final int    SWING_DOWN                          = 1;
-    static final int    SWING_IDLE                          = 0;
+    static final int    SWING_UP_DIRECTION                  = -1;
+    static final int    SWING_DOWN_DIRECTION                = 1;
+    static final double SWING_UP_COMMAND                    = -0.99;
+    static final double SWING_DOWN_COMMAND                  = 0.99;
+    static final int    SWING_IDLE_DIRECTION                = 0;
 
     static final double POS_OPEN_CLAW_RIGHT                     = 0.0;
     static final double POS_CLOSE_CLAW_RIGHT                    = 0.5;
@@ -77,6 +81,13 @@ public class BotTop {
 
     DigitalChannel coilLimitUp = null;
     DigitalChannel coilLimitDown = null;
+
+
+    /**
+     * State variables
+     */
+    private int  coilMovementDirection      = COIL_IDLE_DIRECTION;
+    private int  armMovementDirection       = SWING_IDLE_DIRECTION;
 
 
     /**
@@ -267,7 +278,7 @@ public class BotTop {
 
 
     /**
-     * TRAY CLAMPS
+     * TRAY CLAMPS METHODS
      */
 
     public void clampOn() {
@@ -288,17 +299,30 @@ public class BotTop {
 
 
     /**
-     * ARM SWING
+     * ARM SWING METHODS
      */
 
-    public boolean isSwingLimitUp() {
+
+    /**
+     * Checks the state of the limit switch for the arm limit up.
+     * If there is no limit switch, it returns false.
+     *
+     * @return
+     */
+    private boolean isSwingLimitUp() {
         if (swingLimitUp == null) {
             return false;
         }
         return !(swingLimitUp.getState() == true );
     }
 
-    public boolean isSwingLimitDown() {
+    /**
+     * Checks the state of the limit switch for the arm limit down.
+     * If there is no limit switch, it returns false.
+     *
+     * @return
+     */
+    private boolean isSwingLimitDown() {
         if (swingLimitDown == null) {
             return false;
         }
@@ -306,44 +330,77 @@ public class BotTop {
     }
 
 
+    /**
+     * Check the state of the limit switch and the direction of the movement
+     * as kept in the state variable armMovementDirection.  It returns true if
+     * the limit condition is met.
+     *
+     * If the limit condition is met, the motor is stopped
+     * @return
+     */
+    private boolean isArmAtLimit() {
+        if (armMovementDirection == SWING_UP_DIRECTION  && isSwingLimitUp()) {
+            armMovementDirection = SWING_IDLE_DIRECTION;
+            armLiftSwing.setPower(0.0);
+            return true;
+        }
+
+        if (armMovementDirection == SWING_DOWN_DIRECTION  && isSwingLimitDown()) {
+            armMovementDirection = SWING_IDLE_DIRECTION;
+            armLiftSwing.setPower(0.0);
+            return true;
+        }
+
+        return false;
+    }
+
+
+    /**
+     * This method is used to move the swinging arm up or down,
+     * it takes a command directly from the Gamepad joystick (up -> lift arm, down -> lower arm)
+     * or you can pass in a predefined command SWING_UP_COMMAND or SWING_DOWN_COMMAND.
+     *
+     * In either case the arm is move at a predefined speed = SPEED_SWING
+     *
+     * @param command
+     */
     public void swing(double command) {
 
         if (armLiftSwing == null) {
             return;
         }
 
-        double movementDirection;
-
-        if ( command > 0 ) {
-            movementDirection = SWING_UP;
+        if ( ( command > 0 ) || (command == SWING_UP_COMMAND) ) {
+            armMovementDirection = SWING_UP_DIRECTION;
         }
-        else if (command < 0) {
-            movementDirection = SWING_DOWN;
+        else if ( (command < 0) || (command == SWING_DOWN_COMMAND) ){
+            armMovementDirection = SWING_DOWN_DIRECTION;
         }
         else {
+            armMovementDirection = SWING_IDLE_DIRECTION;
             armLiftSwing.setPower(0.0);
             return;
         }
 
-        if (movementDirection == SWING_UP  && !isSwingLimitUp()) {
-            armLiftSwing.setPower(movementDirection * SPEED_SWING);
+        if (!isArmAtLimit()) {
+            linearMotionCoil.setPower(armMovementDirection * SPEED_SWING);
         }
 
-        else if (movementDirection == SWING_DOWN && !isSwingLimitDown()) {
-            armLiftSwing.setPower(movementDirection * SPEED_SWING);
-        }
-
-        else {
-            armLiftSwing.setPower(0.0);
-        }
     }
+
 
 
     /**
      * LINEAR MOTION CONTROL
      */
 
-    public boolean isCoilLimitUp() {
+    /**
+     * Checks the state of the limit switch for the coil limit up.
+     * If there is no limit switch, it returns false.
+     *
+     * @return
+     */
+    private boolean isCoilLimitUp() {
 
         if (coilLimitUp == null) {
             return false;
@@ -352,7 +409,14 @@ public class BotTop {
         return !(coilLimitUp.getState() == true );
     }
 
-    public boolean isCoilLimitDown() {
+
+    /**
+     * Checks the state of the limit switch for the coil limit down.
+     * If there is no limit switch, it returns false.
+     *
+     * @return
+     */
+    private boolean isCoilLimitDown() {
 
         if (coilLimitDown == null) {
             return false;
@@ -362,6 +426,43 @@ public class BotTop {
     }
 
 
+
+    /**
+     * Check the state of the limit switch and the direction of the movement
+     * as kept in the state variable coilMovementDirection.  It returns true if
+     * the limit condition is met.
+     *
+     * If the limit condition is met, the motor is stopped
+     * @return
+     */
+    private boolean isCoilAtLimit() {
+
+        if (coilMovementDirection == COIL_UP_DIRECTION  && isCoilLimitUp()) {
+            coilMovementDirection = COIL_IDLE_DIRECTION;
+            linearMotionCoil.setPower(0.0);
+            return true;
+        }
+
+        if (coilMovementDirection == COIL_DOWN_DIRECTION  && isCoilLimitDown()) {
+            coilMovementDirection = COIL_IDLE_DIRECTION;
+            linearMotionCoil.setPower(0.0);
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+    /**
+     * This method is used to coil/uncoil the linear motion thread.
+     * it takes a command directly from the Gamepad joystick (up -> coil, down -> uncoil)
+     * or you can pass in a predefined command COIL_UP_COMMAND or COIL_DOWN_COMMAND.
+     *
+     * In either case coiling/uncoiling is done at a predefined speed = SPEED_COIL
+     *
+     * @param command
+     */
     public void coil(double command) {
 
 
@@ -369,32 +470,37 @@ public class BotTop {
             return;
         }
 
-
-        double movementDirection;
-
-        if ( command < 0 ) {
-            movementDirection = COIL_UP;
+        if ( (command < 0) || (command == COIL_UP_COMMAND) ) {
+            coilMovementDirection = COIL_UP_DIRECTION;
         }
-        else if (command > 0) {
-            movementDirection = COIL_DOWN;
+        else if ((command > 0) || (command == COIL_DOWN_COMMAND)) {
+            coilMovementDirection = COIL_DOWN_DIRECTION;
         }
         else {
+            coilMovementDirection = COIL_IDLE_DIRECTION;
             linearMotionCoil.setPower(0.0);
             return;
         }
 
-        if (movementDirection > 0  && !isCoilLimitUp()) {
-            linearMotionCoil.setPower(movementDirection * SPEED_COIL);
-        }
-
-        else if (movementDirection < 0 && !isCoilLimitDown()) {
-            linearMotionCoil.setPower(movementDirection * SPEED_COIL);
-        }
-
-        else {
-            linearMotionCoil.setPower(0.0);
+        if (!isCoilAtLimit()) {
+            linearMotionCoil.setPower(coilMovementDirection * SPEED_COIL);
         }
     }
+
+
+
+    /**
+     * Checks the current direction the motors and the states of the limit switches for
+     * all movement limited by lijmit switches.
+     *
+     * This should be used inside ALL while loops in autonomous mode
+     *
+     * @return
+     */
+    public boolean checkAllLimitSwitches() {
+        return isCoilAtLimit() || isArmAtLimit();
+    }
+
 
     void dbugThis(String s) {
 
@@ -402,6 +508,4 @@ public class BotTop {
             Log.d("BOTTOP: ", s);
         }
     }
-
-
 }

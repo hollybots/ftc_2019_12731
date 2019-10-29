@@ -96,7 +96,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-
             if ( currentState == STATE_done ) {
                  break;
             }
@@ -105,7 +104,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
                 case STATE_idle:
                     stopMoving();
-                    idle();
+                    autonomousIdleTasks();
                     break;
 
                 case STATE_moveToStones:
@@ -169,7 +168,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
      */
     protected void moveToStoneState() {
 
-        botTop.slideUp();
+        botTop.swing(BotTop.SWING_UP_COMMAND);
+        botTop.slideDown();
         moveXInchesFromFrontObject(11.0, 10000, 1.0);
         currentState = STATE_scanForStone;
         return;
@@ -236,6 +236,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         while (absDelta > 1.0 && opModeIsActive()) {
 
+            botTop.checkAllLimitSwitches();
+
             if (delta < 0) {
                 powerPropulsion(TravelDirection.LEFT, 0.3);
             } else {
@@ -267,10 +269,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void pickUpStoneState() {
         botTop.stopSlide();
-        botTop.slideUp();
         botTop.closeClaw();
-        justWait(500);
-        botTop.stopSlide();
+        botTop.swing(BotTop.SWING_DOWN_COMMAND);
         currentState = STATE_travelToBuildSite;
 //        currentState = STATE_idle;
         return;
@@ -282,12 +282,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
 
     protected void dropOffStoneState() {
-        gotoHeading(0);
         botTop.openClaw();
         moveXInchesFromBackObject(12.0, 100000, 1.0);
-        botTop.closeClaw();
-        botTop.openClaw();
-        slideByTime(2000, 1.0);
         currentState = STATE_parkUnderBridge;
         return;
     }
@@ -327,7 +323,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         botTop.getSlide().setPower(power);
         while (opModeIsActive() &&  runtime.milliseconds() < limit) {
-            idle();
+            autonomousIdleTasks();
         }
         botTop.getSlide().setPower(0.0);
     }
