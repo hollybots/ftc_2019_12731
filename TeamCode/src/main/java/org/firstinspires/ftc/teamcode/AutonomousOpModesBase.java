@@ -36,9 +36,8 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -67,7 +66,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  */
 
 @Autonomous(name="Autonomous Base Class", group="none")
-//@Disabled
+@Disabled
 public class AutonomousOpModesBase extends LinearOpMode {
 
     protected static final double CLOSE_ENOUGH_X                = 1.0;
@@ -140,10 +139,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected static final int NB_RIGHT_SENSORS                 = 1;
 
     // Distance of each sensors measured in inches from the center of the robot
-    protected static final double DISTANCE_FRONT_SENSORS        = 8;
-    protected static final double DISTANCE_REAR_SENSORS         = -8;
-    protected static final double DISTANCE_LEFT_SENSORS         = -8;
-    protected static final double DISTANCE_RIGHT_SENSORS        = 8;
+    protected static final double DISTANCE_FRONT_SENSORS        = 9;
+    protected static final double DISTANCE_REAR_SENSORS         = 9;
+    protected static final double DISTANCE_LEFT_SENSORS         = 6;
+    protected static final double DISTANCE_RIGHT_SENSORS        = 6;
 
     // Every 2 seconds we check if the delta position in either direction has changed by this amount
     protected static final double DELTA_CHECK_IF_STALLED_X      = 2.0;
@@ -191,6 +190,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
     double cameraPanVerticalPosition        = 0;
     int cameraPanVerticalDirection          = 1; // 1: up -1: down
 
+
+    // limit switches
+    DigitalChannel backCollision       = null;
+
     /**
      * Class valiables for persistence
      */
@@ -201,12 +204,14 @@ public class AutonomousOpModesBase extends LinearOpMode {
     // Previous Robot placement in Field Coordinates [x:{-F/2, F/2} y: {-F/2,F/2}]
     FieldPlacement botPreviousPlacement         = null;
 
+    // current direction of displacement
+    TravelDirection propulsionDirection         = TravelDirection.IDLE;
+
     // Timekeeper OpMode members.
     protected ElapsedTime runtime = new ElapsedTime();
 
 
-
-    @Override
+//    @Override
     public void runOpMode() {}
 
 
@@ -256,22 +261,16 @@ public class AutonomousOpModesBase extends LinearOpMode {
         distanceRight = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range_1");
 
 
-        /* **********************************
-            SERVO
+        /**
+         *  COLLISION
          */
         try {
-            camera_pan_horizontal = hardwareMap.get(Servo.class, "camera_pan_horizontal");
-        } catch (Exception $e) {
-            camera_pan_horizontal = null;
+            backCollision = hardwareMap.get(DigitalChannel.class, "back_collision");
         }
-        try {
-            camera_pan_vertical = hardwareMap.get(Servo.class, "camera_pan_vertical");
-        } catch (Exception $e) {
-            camera_pan_vertical = null;
+        catch (Exception e){
+            backCollision = null;
+            dbugThis("Unable to initialize back collision limit switch");
         }
-
-        setCameraVerticalPosition(0.6);
-        setCameraHorizontalPosition(0.5);
 
         telemetry.addData("Status", "Robot Initialized");
         telemetry.update();
@@ -309,8 +308,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * This function stops all motors simultaneously
      */
     protected void stopMoving() {
-
         botBase.stop();
+        propulsionDirection = TravelDirection.IDLE;
         return;
     }
 
@@ -379,6 +378,46 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     }
 
+    /**
+     * moveRight()
+     *
+     * @param distance: in inches
+     */
+    protected void moveRight(double distance, double power)
+    {
+        move(TravelDirection.RIGHT, timeToMoveInMs(TravelDirection.RIGHT, power, distance), power, false);
+    }
+
+    /**
+     * moveLeft()
+     *
+     * @param distance: in inches
+     */
+    protected void moveLeft(double distance, double power)
+    {
+        move(TravelDirection.LEFT, timeToMoveInMs(TravelDirection.LEFT, power, distance), power, false);
+    }
+
+    /**
+     * moveBackward()
+     *
+     * @param distance: in inches
+     */
+    protected void moveBackward(double distance, double power)
+    {
+        move(TravelDirection.BACKWARD, timeToMoveInMs(TravelDirection.BACKWARD, power, distance), power,false);
+    }
+
+    /**
+     * moveForward()
+     *
+     * @param distance: in inches
+     */
+    protected void moveForward(double distance, double power)
+    {
+        move(TravelDirection.FORWARD, timeToMoveInMs(TravelDirection.FORWARD, power, distance), power,false);
+    }
+
 
     /**
      * moveRight()
@@ -443,11 +482,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             runtime.milliseconds() < limit &&
                     distanceLeft != null && distanceLeft.getDistance(DistanceUnit.INCH) > x
         ) {
-
             autonomousIdleTasks();
-//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
-//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
-//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
         }
 
         stopMoving();
@@ -478,9 +513,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
                     distanceRight != null && distanceRight.getDistance(DistanceUnit.INCH) > x
         ) {
             autonomousIdleTasks();
-//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
-//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
-//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
         }
 
         stopMoving();
@@ -510,9 +542,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
             distanceFront != null && distanceFront.getDistance(DistanceUnit.INCH) > x
         ) {
             autonomousIdleTasks();
-//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
-//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
-//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
         }
 
         stopMoving();
@@ -538,13 +567,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.BACKWARD) &&
+            !isCollidingWithBackObject() &&
             runtime.milliseconds() < limit &&
             distanceBack != null && distanceBack.getDistance(DistanceUnit.INCH) > x
         ) {
             autonomousIdleTasks();
-//            dbugThis("moveXInchesFromFrontObject: Distance Front:" + distanceFront.getDistance(DistanceUnit.INCH));
-//            dbugThis("moveXInchesFromFrontObject: isHittingSomething:" + isHittingSomething(TravelDirection.FORWARD));
-//            dbugThis("moveXInchesFromFrontObject: Runtime : " + (int) runtime.milliseconds() + "  Limit:" + (int) limit);
         }
 
         stopMoving();
@@ -571,20 +598,22 @@ public class AutonomousOpModesBase extends LinearOpMode {
         powerPropulsion(direction, power);
 
         double limit = runtime.milliseconds() + ms;
+        double limitToSlowDown = runtime.milliseconds() + 0.85 * ms;
+        double now;
 
         while (
             opModeIsActive() &&
             !isHittingSomething(direction) &&
+            !isCollidingWithBackObject() &&
             !isStalled() &&
-            runtime.milliseconds() < limit &&
+            (now = runtime.milliseconds()) < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
+            if ( now > limitToSlowDown ) {
+                powerPropulsion(direction, power / 2.0);
+            }
             autonomousIdleTasks();
         }
-//
-//        dbugThis(String.format("isHittingSomething : %b", isHittingSomething(direction)));
-//        dbugThis(String.format("isStalled : %b", isStalled()));
-//        dbugThis(String.format("untilRealigned : %b", untilRealigned));
 
         stopMoving();
         return;
@@ -616,24 +645,28 @@ public class AutonomousOpModesBase extends LinearOpMode {
                 multiplierFR = 1;
                 multiplierRL = 1;
                 multiplierRR = 1;
+                propulsionDirection = TravelDirection.FORWARD;
                 break;
             case BACKWARD:
                 multiplierFL = -1;
                 multiplierFR = -1;
                 multiplierRL = -1;
                 multiplierRR = -1;
+                propulsionDirection = TravelDirection.BACKWARD;
                 break;
             case LEFT:
                 multiplierFL = -1;
                 multiplierFR = 1;
                 multiplierRL = 1;
                 multiplierRR = -1;
+                propulsionDirection = TravelDirection.LEFT;
                 break;
             case RIGHT:
                 multiplierFL = 1;
                 multiplierFR = -1;
                 multiplierRL = -1;
                 multiplierRR = 1;
+                propulsionDirection = TravelDirection.RIGHT;
                 break;
             default:
                 return;
@@ -906,29 +939,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public boolean isHittingSomething(TravelDirection direction) {
 
-//        double distance = 0.0;
-//        switch (direction) {
-//            case FORWARD:
-//                if ( distanceFront != null && Math.max(distance, distanceFront.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
-//                    return true;
-//                }
-//                break;
-//            case BACKWARD:
-//                if ( distanceBack != null && Math.max(distance, distanceBack.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_Y) {
-//                    return true;
-//                }
-//                break;
-//            case LEFT:
-//                if ( distanceLeft != null && Math.max(distance, distanceLeft.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
-//                    return true;
-//                }
-//                break;
-//            case RIGHT:
-//                if ( distanceRight != null && Math.max(distance, distanceRight.getDistance(DistanceUnit.INCH)) <= CLOSE_ENOUGH_X) {
-//                    return true;
-//                }
-//                break;
-//        }
         return false;
     }
 
@@ -940,7 +950,88 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
 
-    public int timeToMoveInMs(double displacementInInches) {
-        return (int) (1464 * displacementInInches / 13.0);
+    public int timeToMoveInMs(TravelDirection direction, double power, double displacementInInches) {
+
+        if (direction == TravelDirection.LEFT || direction == TravelDirection.RIGHT ) {
+            if (power <= 0.2) {
+                return (int) Math.round(displacementInInches * 166.67);
+            }
+            if (power <= 0.3) {
+                return (int) Math.round(displacementInInches * 93.80);
+            }
+            if (power <= 0.4) {
+                return (int) Math.round(displacementInInches * 71.42);
+            }
+            if (power <= 0.5) {
+                return (int) Math.round(displacementInInches * 60.00);
+            }
+            if (power <= 0.6) {
+                return (int) Math.round(displacementInInches * 45.45);
+            }
+            if (power <= 0.7) {
+                return (int) Math.round(displacementInInches * 37.5);
+            }
+
+            return (int) Math.round(displacementInInches * 20.00);
+        }
+        if (direction == TravelDirection.FORWARD || direction == TravelDirection.BACKWARD ) {
+            if (power <= 0.2) {
+                return (int) Math.round(displacementInInches * 125.0);
+            }
+            if (power <= 0.3) {
+                return (int) Math.round(displacementInInches * 89.29);
+            }
+            if (power <= 0.4) {
+                return (int) Math.round(displacementInInches * 58.82);
+            }
+            if (power <= 0.5) {
+                return (int) Math.round(displacementInInches * 53.57);
+            }
+            if (power <= 0.6) {
+                return (int) Math.round(displacementInInches * 40.92);
+            }
+            if (power <= 0.7) {
+                return (int) Math.round(displacementInInches * 33.33);
+            }
+            return (int) Math.round(displacementInInches * 28.57);
+        }
+
+        return 0;
     }
+
+
+
+    /**
+     * Check the state of the limit switch and the direction of the movement
+     * as kept in the state variable propulsionDirection.  It returns true if
+     * the limit condition is met.
+     *
+     * If the limit condition is met, the motor is stopped
+     * @return
+     */
+    public boolean isCollidingWithBackObject() {
+
+        if (propulsionDirection == TravelDirection.BACKWARD && isCollidingBack()) {
+            stopMoving();
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Checks the state of the limit switch for backCollision limit switch.
+     * If there is no such limit switch, it returns false.
+     *
+     * @return
+     */
+    public boolean isCollidingBack() {
+
+        if (backCollision == null) {
+            return false;
+        }
+
+        return !(backCollision.getState() == true );
+    }
+
 }

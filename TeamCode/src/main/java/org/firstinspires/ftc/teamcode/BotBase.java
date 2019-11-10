@@ -1,11 +1,16 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.util.Log;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class BotBase {
+
+    static final boolean DEBUG                                  = true;
 
     static final double TORQUENADO_COUNTS_PER_MOTOR_REV        = 1440;                 // eg: REV Motor Encoder
     static final double NEVEREST40_COUNTS_PER_MOTOR_REV        = 1120;                 // eg: REV Motor Encoder
@@ -70,7 +75,10 @@ public class BotBase {
          */
         bling = new BlinkinBling(hardwareMap);
 
-    }
+
+
+
+     }
 
     protected void stop() {
         frontLeftDrive.setPower(0.0);
@@ -101,6 +109,17 @@ public class BotBase {
     public void setBling(double mode) {
         if ( bling != null ) {
             bling.setBlinkinPattern(mode);
+        }
+    }
+
+
+
+
+
+    void dbugThis(String s) {
+
+        if ( DEBUG == true ) {
+            Log.d("BOTTOP: ", s);
         }
     }
 }

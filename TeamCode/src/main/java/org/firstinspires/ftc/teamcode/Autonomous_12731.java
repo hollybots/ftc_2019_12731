@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Autonomous(name="Base Team 12731", group="1")
+@Autonomous(name="Base Team 12731", group="none")
 @Disabled
 
 public class Autonomous_12731 extends AutonomousOpModesBase {
@@ -37,18 +37,11 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected FieldPlacement stoneRelativePlacement             = null;
 
-
-
-//    protected CRServo slide                               = null;
-//    protected Servo claw                                  = null;
-//    protected Servo rightPin                              = null;
-//    protected Servo leftPin                               = null;
-
     // Sounds
     protected BotSounds botSounds = null;
 
     // alignment
-    protected static final double CAMERA_TO_CENTER               = 0.0;
+    protected static final double CAMERA_TO_CENTER               = 2.5;
 
     protected static final double BLING_MODE_CLAMP               = 0.6545;
 
@@ -58,7 +51,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         DEBUG = true;
         super.initAutonomous();
-
 
         /* **********************************
            LIGHTS
@@ -74,24 +66,15 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
 
-        setCameraVerticalPosition(0.35);
-
-
         /*********************************************
          * WAIT FOR START
          * *******************************************/
-
-        waitForStart();
         runtime.reset();
-
-        telemetry.addData("Status", "Started!");
-        telemetry.update();
-
+        waitForStart();
 
         /*********************************************
          * GAME IS ON !!
          * *******************************************/
-
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
@@ -154,7 +137,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
                 case STATE_moveTrayBack:
                     moveTrayBackState();
                     break;
-
             }
             telemetry.update();
         }
@@ -170,7 +152,9 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         botTop.swing(BotTop.SWING_UP_COMMAND);
         botTop.slideDown();
-        moveXInchesFromFrontObject(11.0, 10000, 1.0);
+        botTop.openClaw();
+        justWait(1000);
+        moveXInchesFromFrontObject(11.0, 10000, 0.2);
         currentState = STATE_scanForStone;
         return;
     }
@@ -214,9 +198,9 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
         // First we do a gross movement just to get closer
         if (delta < 0) {
-            moveLeftByTime(timeToMoveInMs(absDelta), 0.9);
+            moveLeft(delta, 0.1);
         } else {
-            moveRightByTime(timeToMoveInMs(absDelta), 0.9);
+            moveRight(delta, 0.1);
         }
         stopMoving();
 
@@ -239,9 +223,9 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
             botTop.checkAllLimitSwitches();
 
             if (delta < 0) {
-                powerPropulsion(TravelDirection.LEFT, 0.3);
+                powerPropulsion(TravelDirection.LEFT, 0.2);
             } else {
-                powerPropulsion(TravelDirection.RIGHT, 0.3);
+                powerPropulsion(TravelDirection.RIGHT, 0.2);
             }
             justWait(1000);
             stoneRelativePlacement = vuMark.find();
@@ -261,18 +245,21 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
 
     protected void getCloseEnoughToPickUpState() {
-        moveXInchesFromFrontObject(2.0, 10000, 0.5);
+        dbugThis("getCloseEnoughToPickUpState");
+        moveXInchesFromFrontObject(2.0, 10000, 0.3);
         currentState = STATE_pickUpStone;
-
         return;
     }
 
     protected void pickUpStoneState() {
+        dbugThis("pickUpStoneState");
         botTop.stopSlide();
         botTop.closeClaw();
+        // slide up
+        slideByTime(300,  botTop.POWER_SLIDE);
         botTop.swing(BotTop.SWING_DOWN_COMMAND);
-        currentState = STATE_travelToBuildSite;
-//        currentState = STATE_idle;
+//        currentState = STATE_travelToBuildSite;
+        currentState = STATE_idle;
         return;
     }
 
@@ -283,7 +270,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void dropOffStoneState() {
         botTop.openClaw();
-        moveXInchesFromBackObject(12.0, 100000, 1.0);
+        moveXInchesFromBackObject(12.0, 100000, 0.6);
         currentState = STATE_parkUnderBridge;
         return;
     }
@@ -307,9 +294,11 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void moveTrayBackState() {
 
-        moveXInchesFromBackObject(7.0, 100000, 0.8);
+        moveXInchesFromFrontObject(2.0, 10000, 0.5);
         botTop.clampRelease();
+        justWait(500);
         currentState = STATE_parkUnderBridge;
+//        currentState = STATE_idle;
     }
 
     protected void parkUnderBridgeState() {

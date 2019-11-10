@@ -58,6 +58,8 @@ public class TestRangeSensors extends TeleOpModesBase
     DigitalChannel swingLimitDown = null;
     DigitalChannel coilLimitUp = null;
     DigitalChannel coilLimitDown = null;
+    DigitalChannel backCollision  = null;
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -89,8 +91,10 @@ public class TestRangeSensors extends TeleOpModesBase
          */
         swingLimitUp                         = hardwareMap.get(DigitalChannel.class, "swing_limit_up");
         swingLimitDown                       = hardwareMap.get(DigitalChannel.class, "swing_limit_down");
-//        coilLimitUp                          = hardwareMap.get(DigitalChannel.class, "coil_limit_up");
-//        coilLimitDown                        = hardwareMap.get(DigitalChannel.class, "coil_limit_down");
+        coilLimitUp                          = hardwareMap.get(DigitalChannel.class, "coil_limit_up");
+        coilLimitDown                        = hardwareMap.get(DigitalChannel.class, "coil_limit_down");
+        backCollision                        = hardwareMap.get(DigitalChannel.class, "back_collision");
+
 
 
         // Tell the driver that initialization is complete.
@@ -234,6 +238,9 @@ public class TestRangeSensors extends TeleOpModesBase
         // Show the elapsed game time and wheel power.
         telemetry.addData("Arm up : " , "" + swingLimitUp.getState());
         telemetry.addData("Arm down : " , "" + swingLimitDown.getState());
+        telemetry.addData("coil down : " , "" + coilLimitDown.getState());
+        telemetry.addData("coil up : " , "" + coilLimitUp.getState());
+        telemetry.addData("colliding in the back : " , "" + backCollision.getState());
 
         telemetry.update();
     }
@@ -254,5 +261,21 @@ public class TestRangeSensors extends TeleOpModesBase
             return true;
         }
         return false;
+    }
+
+
+    /**
+     * Checks the state of the limit switch for backCollision limit switch.
+     * If there is no such limit switch, it returns false.
+     *
+     * @return
+     */
+    public boolean isCollidingBack() {
+
+        if (backCollision == null) {
+            return false;
+        }
+
+        return !(backCollision.getState() == true );
     }
 }

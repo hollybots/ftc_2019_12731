@@ -6,22 +6,19 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @Autonomous(name="Red Alliance Stone - 12731", group="1")
 public class Autonomous_12731_red_stone extends Autonomous_12731 {
+
 
     @Override
     public void initAutonomous() {
 
         super.initAutonomous();
+//        currentState = STATE_getCloseEnoughToPickup;
         currentState = STATE_moveToStones;
     }
-
-    @Override
-    public void runOpMode() {
-        super.runOpMode();
-    }
-
 
     /**
      * Here we scan left an right to find a stone.  One the stone is found
@@ -38,7 +35,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
             return;
         }
 
-        moveXInchesFromLeftObject(9.0, 10000, 0.6);
+        moveXInchesFromLeftObject(9.0, 10000, 0.4);
         boolean goingRight = false;
 
         while (opModeIsActive() && stoneRelativePlacement == null) {
@@ -52,10 +49,10 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
             }
             if ( goingRight ) {
                 gotoHeading(0);
-                moveLeftByTime(6000, 0.4);
+                moveLeftByTime(6000, 0.2);
             } else {
                 gotoHeading(0);
-                moveRightByTime(6000, 0.4);
+                moveRightByTime(6000, 0.2);
             }
 
             goingRight = !goingRight;
@@ -67,9 +64,11 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
 
     protected void travelToBuildSiteState() {
-        moveXInchesFromBackObject(12.0, 100000, 0.8);
+        moveXInchesFromBackObject(12.0, 100000, 0.4);
         gotoHeading(0);
-        moveRightByTime(4800, 1.0);
+        //moveRight(72.0 - distanceLeft.getDistance(DistanceUnit.INCH) - DISTANCE_LEFT_SENSORS, 0.6);
+        double toGo = 72.0 - distanceLeft.getDistance(DistanceUnit.INCH) - DISTANCE_LEFT_SENSORS;
+        dbugThis("Will be traveling right for " + toGo + " inches");
         currentState = STATE_dropOffStone;
         return;
     }

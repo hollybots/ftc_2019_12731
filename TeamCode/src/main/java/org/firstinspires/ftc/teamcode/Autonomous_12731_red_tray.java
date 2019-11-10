@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 @Autonomous(name="Red Alliance Tray - 12731", group="1")
 public class Autonomous_12731_red_tray extends Autonomous_12731 {
 
@@ -13,16 +15,11 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
         currentState = STATE_moveToTray;
     }
 
-    @Override
-    public void runOpMode() {
-        super.runOpMode();
-    }
-
-
     protected void moveToTrayState() {
 
-        moveXInchesFromRightObject(24.0, 10000, 1.0);
-        moveForwardByTime(2312, 0.9);
+        moveBackward(4, 0.5);
+        moveXInchesFromLeftObject(24.0 - DISTANCE_LEFT_SENSORS, 6000, 0.5);
+        moveBackwardByTime(10000, 0.5);
         currentState = STATE_clampTray;
     }
 
@@ -30,8 +27,9 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
     protected void parkUnderBridgeState() {
 
         gotoHeading(0);
-        moveLeftByTime(1850, 0.9);
-        currentState = STATE_done;
+        double currentDistanceLeft = distanceLeft.getDistance(DistanceUnit.INCH);
+        moveRight(68.0 - currentDistanceLeft + DISTANCE_LEFT_SENSORS, 0.5);
+        currentState = STATE_parkUnderBridge;
     }
 
 }

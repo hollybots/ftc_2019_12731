@@ -30,9 +30,10 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+
+
 
 /**
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
@@ -41,22 +42,94 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 //@Disabled
 public class TeleOpMode_12731 extends TeleOpModesBase
 {
+
+    private class WheelPower {
+        double front_left;
+        double front_right;
+        double rear_left;
+        double rear_right;
+    };
+    static final int CONTROL_FORWARD = 0;
+    static final int CONTROL_RIGHT = 1;
+    private double[] ramp = {
+            -1,
+            -0.86,
+            -0.73,
+            -0.61,
+            -0.51,
+            -0.42,
+            -0.34,
+            -0.27,
+            -0.22,
+            -0.17,
+            -0.13,
+            -0.09,
+            -0.06,
+            -0.04,
+            -0.03,
+            -0.02,
+            -0.01,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.01,
+            0.02,
+            0.03,
+            0.04,
+            0.06,
+            0.09,
+            0.13,
+            0.17,
+            0.22,
+            0.27,
+            0.34,
+            0.42,
+            0.51,
+            0.61,
+            0.73,
+            0.86,
+            1
+    };
+
+    // This limits the power change to an 0.1 increment every 200ms 0,00005 power/s^2
+    static final double  DELTA_T                        = 200; // in ms ) {
+    static final double  MAX_CHANGE_IN_POWER_IN_DELTA_T = 0.1;
+
+    static final double  LED_OFF                        = 0.7745;   // off
+    static final double  LED_TEAM_COLORS1               = 0.6545;  // Sinelon, Color 1 and 2
+    static final double  LED_TEAM_COLORS2               = 0.6295;  // End to End Blend
+    static final double  LED_TEAM_COLORS3               = 0.6045;  // Sparkle, Color 1 on Color 2
+    static final double  LED_TEAM_COLORS4               = 0.6195;  // Beats per Minute, Color 1 and 2
+
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
 
-    static final double     AUTONOMOUS_SPEED            = 0.6;
     static final double     K                           = 0.6;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    protected CRServo slide                               = null;
-    protected Servo claw                                  = null;
-    protected Servo rightPin                              = null;
-    protected Servo leftPin                               = null;
-
     boolean use2Controllers                             = true;
 
+
+    // State variables
     boolean isClamping                                  = false;
     boolean waitForClampingButtonRelease                = false;
+
+
+
+
+    double lastTimeWeCheckedSpeed                       = 0.0;
+    int currentRampNumberForward                        = 20;
+    int currentRampNumberRight                          = 20;
+    double previousPowerForward                             = 0;
+    double previousPowerRight                               = 0;
+
+
+    int resetState                                      = 0;
+    int readyState                                      = 0;
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -70,7 +143,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         // Init Botbase and Bottop
         super.init();
 
-        botBase.setBling(0.7745);
+        botBase.setBling(LED_OFF);
 
         // Tell the driver that initialization is complete.
         telemetry.addData("Status", "Initialized");
@@ -85,7 +158,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void init_loop() {
 
-        telemetry.addData("Status", "Make sure motors are free to move");
         // Send telemetry message to indicate successful Encoder reset
         telemetry.update();
     }
@@ -107,8 +179,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void loop() {
 
-        telemetry.addData("Autonomous Mode", "Off");
-
         /*
         Read gamepad value
          */
@@ -120,9 +190,16 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         // push joystick1 forward to go forward
         // push joystick1 to the right to strafe right
         // push joystick2 to the right to rotate clockwise
-        double forward      = -gamepad1.right_stick_y;
-        double right        = gamepad1.right_stick_x;
-        double clockwise    = gamepad1.left_stick_x;
+
+
+        double forward                  = -gamepad1.right_stick_y;
+        double right                    = gamepad1.right_stick_x;
+        WheelPower wheels               = null;
+
+        double now                      = runtime.milliseconds();
+        double deltaT                   = now - lastTimeWeCheckedSpeed;
+
+        double clockwise                = gamepad1.left_stick_x;
 
         double slideUp          = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
         double slideDown        = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
@@ -135,129 +212,135 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         boolean isPressedClampingButton     = gamepad1.right_stick_button;
         boolean toggledClamp                = false;
 
+        boolean blinkinOff                  =  gamepad1.dpad_up;
+        boolean blinkin1                    =  gamepad1.dpad_down;
+        boolean blinkin2                    =  gamepad1.dpad_left;
+        boolean blinkin3                    =  gamepad1.dpad_right;
 
-        // Now add a tuning constant K for the “rotate” axis sensitivity.
-        // Start with K=0, and increase it very slowly (do not exceed K=1)
-        // to find the right value after you’ve got fwd/rev and strafe working:
-        clockwise = K*clockwise;
-
-        // if "theta" is measured CLOCKWISE from the zero reference:
-        double temp = forward* Math.cos(theta) + right* Math.sin(theta);
-        right = -forward* Math.sin(theta) + right* Math.cos(theta);
-        forward = temp;
-
-// if "theta" is measured COUNTER-CLOCKWISE from the zero reference:
-//        temp = forward*Math.cos(theta) - right*Math.sin(theta);
-//        right = forward*Math.sin(theta) + right*Math.cos(theta);
-//        forward = temp;
+        boolean reset                       =  gamepad2.x;
+        boolean ready                       =  gamepad2.y;
 
 
-        // Now apply the inverse kinematic tranformation
-        // to convert your vehicle motion command
-        // to 4 wheel speed commands:
-        double front_left = forward + clockwise + right;
-        double front_right = forward - clockwise - right;
-        double rear_left = forward + clockwise - right;
-        double rear_right = forward - clockwise + right;
-
-        // Finally, normalize the wheel speed commands
-        // so that no wheel speed command exceeds magnitude of 1:
-        double max = Math.abs(front_left);
-        if (Math.abs(front_right)>max) {
-            max = Math.abs(front_right);
-        }
-        if (Math.abs(rear_left)>max){
-            max = Math.abs(rear_left);
-        }
-        if (Math.abs(rear_right)>max) {
-            max = Math.abs(rear_right);
-        }
-        if ( max > 1.0 ) {
-            front_left /= max;
-            front_right /= max;
-            rear_left /= max;
-            rear_right /= max;
-        }
-
-        /**
-         * OUTPUT LINEAR MOTION
-         */
-        botTop.coil(linearMotion);
-
-        /**
-         * OUTPUT SWIVEL ARM
-         */
-        botTop.swing(arm);
-
-
-
-        /**
-         * OUTPUT CLAW
-         */
-        if (clawDown) {
-            botTop.closeClaw();
-        }
-        else if (clawUp) {
-            botTop.openClaw();
+        if (deltaT > DELTA_T ) {
+            forward                     = rampUp(CONTROL_FORWARD, forward);
+            wheels                      = calcWheelPower(K, clockwise, forward, right);
+            lastTimeWeCheckedSpeed      = now;
         }
 
 
-        /**
-         * OUTPUT SLIDE
-         */
-        if (slideUp > 0) {
-            botTop.slideUp();
+        // don't allow any other command aside  of propulsion while robot is resetting
+        if (resetState > 0) {
+            maybeEndResetSequence();
         }
-        else if (slideDown > 0) {
-            botTop.slideDown();
-        }
-        else {
-            botTop.stopSlide();
+        // If we aske for reset, we start the sequence here
+        if (resetState == 0 && reset ) {
+            startResetSequence();
         }
 
+        if (resetState == 0) {
 
-        /**
-         * OUTPUT CLAMP
-         */
-        // Check for a toggle state -> needs to be Clamp button must be pressed and released
-        if (isPressedClampingButton) {
-            waitForClampingButtonRelease = true;
-        }
-        else if (waitForClampingButtonRelease) {
-            waitForClampingButtonRelease = false;
-            toggledClamp = true;
+            // don't allow any other command aside  of propulsion while robot is resetting
+            if (readyState > 0) {
+                maybeEndResetSequence();
+            }
+
+            // If we aske for reset, we start the sequence here
+            if (readyState == 0 && ready ) {
+                startReadySequence();
+            }
         }
 
-        if ( toggledClamp && isClamping) {
-            isClamping = false;
-        }
-        else if ( toggledClamp && !isClamping) {
-            isClamping = true;
-        }
-        if ( isClamping ) {
+        if ( resetState == 0 && readyState == 0) {
 
-            botTop.clampOn();
-            botBase.setBling(0.6545);
+            /**
+             * OUTPUT LINEAR MOTION
+             */
+            botTop.coil(linearMotion);
+
+            /**
+             * OUTPUT SWIVEL ARM
+             */
+            botTop.swing(arm);
+
+
+            /**
+             * OUTPUT CLAW
+             */
+            if (clawDown) {
+                botTop.closeClaw();
+            } else if (clawUp) {
+                botTop.openClaw();
+            }
+
+
+            /**
+             * OUTPUT SLIDE
+             */
+            if (slideUp > 0) {
+                botTop.slideUp();
+            } else if (slideDown > 0) {
+                botTop.slideDown();
+            } else {
+                botTop.stopSlide();
+            }
+
+
+            /**
+             * OUTPUT CLAMP
+             */
+            // Check for a toggle state -> needs to be Clamp button must be pressed and released
+            if (isPressedClampingButton) {
+                waitForClampingButtonRelease = true;
+            } else if (waitForClampingButtonRelease) {
+                waitForClampingButtonRelease = false;
+                toggledClamp = true;
+            }
+
+            if (toggledClamp && isClamping) {
+                isClamping = false;
+            } else if (toggledClamp && !isClamping) {
+                isClamping = true;
+            }
+            if (isClamping) {
+
+                botTop.clampOn();
+            } else {
+                botTop.clampRelease();
+            }
         }
-        else {
-            botTop.clampRelease();
-            botBase.setBling(0.7745);
-        }
+
 
         /**
          * OUTPUT PROPULSION
          */
+        if (deltaT > DELTA_T && wheels != null) {
+            // Send calculated power to wheels
+            botBase.getFrontLeftDrive().setPower(wheels.front_left);
+            botBase.getFrontRightDrive().setPower(wheels.front_right);
+            botBase.getRearLeftDrive().setPower(wheels.rear_left);
+            botBase.getRearRightDrive().setPower(wheels.rear_right);
 
-        // Send calculated power to wheels
-        botBase.getFrontLeftDrive().setPower(front_left);
-        botBase.getFrontRightDrive().setPower(front_right);
-        botBase.getRearLeftDrive().setPower(rear_left);
-        botBase.getRearRightDrive().setPower(rear_right);
+            dbugThis(String.format("%.02f,%.02f,%.02f,%.02f", wheels.front_left,wheels.front_right,wheels.rear_left,wheels.rear_right));
+        }
+
+
+        /**
+         * OUTPUT BLING
+         */
+        if (blinkinOff) {
+            botBase.setBling(LED_OFF);
+        }
+        else if (blinkin1) {
+            botBase.setBling(LED_TEAM_COLORS1);
+        }
+        else if (blinkin2) {
+            botBase.setBling(LED_TEAM_COLORS4);
+        }
+        else if (blinkin3) {
+            botBase.setBling(LED_TEAM_COLORS3);
+        }
 
         // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Motors", "front left (%.2f), front right (%.2f), rear left (%.2f), rear right (%.2f)", front_left, front_right, rear_left, rear_right);
-
         telemetry.update();
     }
 
@@ -267,6 +350,155 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     @Override
     public void stop() {
         super.stop();
+        botBase.setBling(LED_OFF);
     }
 
+    private void maybeEndResetSequence(){
+
+        // If the coil is completely down, start moving down the arm
+        if ( botTop.isCoilLimitDown() && resetState == 1 ) {
+            botTop.swing(BotTop.SWING_DOWN_COMMAND);
+            resetState = 2;
+            return;
+        }
+
+        // If the arm limit switch is met, then we are done
+        if ( botTop.isSwingLimitDown() && resetState == 2 ) {
+            resetState = 0;
+        }
+    }
+
+    private void startResetSequence() {
+        resetState = 1;
+        botTop.coil(BotTop.COIL_DOWN_COMMAND);
+        botTop.slideDown();
+        botTop.clampRelease();
+        botTop.openClaw();
+    }
+
+
+    private void maybeEndReadySequence(){
+
+        // If the coil is completely down, start moving down the arm
+        if ( botTop.isSwingLimitUp() && resetState == 1 ) {
+            resetState = 0;
+            return;
+        }
+    }
+
+    private void startReadySequence() {
+
+        // If the coil is not down, ignore the sequence
+        if ( !botTop.isCoilLimitDown() ) {
+            return;
+        }
+
+        botTop.swing(BotTop.SWING_UP_COMMAND);
+        resetState = 1;
+        botTop.slideDown();
+        botTop.clampRelease();
+        botTop.openClaw();
+    }
+
+
+    private WheelPower calcWheelPower(double K, double clockwise, double forward, double right) {
+
+        WheelPower wheels                    = new WheelPower();
+
+        // Now add a tuning constant K for the “rotate” axis sensitivity.
+        // Start with K=0, and increase it very slowly (do not exceed K=1)
+        // to find the right value after you’ve got fwd/rev and strafe working:
+        clockwise = K * clockwise;
+
+        // if "theta" is measured CLOCKWISE from the zero reference:
+        double temp = forward * Math.cos(theta) + right * Math.sin(theta);
+        right = -forward * Math.sin(theta) + right * Math.cos(theta);
+        forward = temp;
+
+        // if "theta" is measured COUNTER-CLOCKWISE from the zero reference:
+//        temp = forward*Math.cos(theta) - right*Math.sin(theta);
+//        right = forward*Math.sin(theta) + right*Math.cos(theta);
+//        forward = temp;
+
+        // Now apply the inverse kinematic tranformation
+        // to convert your vehicle motion command
+        // to 4 wheel speed command:
+        wheels.front_left = forward + clockwise + right;
+        wheels.front_right = forward - clockwise - right;
+        wheels.rear_left = forward + clockwise - right;
+        wheels.rear_right = forward - clockwise + right;
+
+        // Finally, normalize and limit acceleration for the wheel speed command
+        // so that no wheel speed command exceeds magnitude of 1 and acceleration is kept under limit:
+        double calculatedPropulsionCommand = Math.abs(wheels.front_left);
+        if (Math.abs(wheels.front_right) > calculatedPropulsionCommand) {
+            calculatedPropulsionCommand = Math.abs(wheels.front_right);
+        }
+        if (Math.abs(wheels.rear_left) > calculatedPropulsionCommand) {
+            calculatedPropulsionCommand = Math.abs(wheels.rear_left);
+        }
+        if (Math.abs(wheels.rear_right) > calculatedPropulsionCommand) {
+            calculatedPropulsionCommand = Math.abs(wheels.rear_right);
+        }
+
+        if (calculatedPropulsionCommand > 1.0) {
+            wheels.front_left /= calculatedPropulsionCommand;
+            wheels.front_right /= calculatedPropulsionCommand;
+            wheels.rear_left /= calculatedPropulsionCommand;
+            wheels.rear_right /= calculatedPropulsionCommand;
+        }
+
+        return wheels;
+    }
+
+
+
+    private double rampUp(int which, double setPoint) {
+
+
+        if (which == CONTROL_FORWARD) {
+
+            if (setPoint > previousPowerForward && setPoint > 0) {
+
+                previousPowerForward = Math.min(setPoint, previousPowerForward + MAX_CHANGE_IN_POWER_IN_DELTA_T);
+                return previousPowerForward;
+            }
+
+
+            if (setPoint < previousPowerForward && setPoint < 0) {
+
+                previousPowerForward = Math.max(setPoint, previousPowerForward - MAX_CHANGE_IN_POWER_IN_DELTA_T);
+                return previousPowerForward;
+            }
+
+            previousPowerForward = setPoint;
+            return previousPowerForward;
+        }
+//        else if (which == CONTROL_RIGHT) {
+//
+//            if ( setPoint < previousPowerRight) {
+//                currentRampNumberRight = Math.min(Math.max(0, currentRampNumberRight - 1), 40);
+//            }
+//            else if (setPoint > previousPowerRight) {
+//                currentRampNumberRight = Math.min(Math.max(0, currentRampNumberRight + 1), 40);
+//            }
+//
+//            previousPowerRight = ramp[currentRampNumberForward];
+//            return ramp[currentRampNumberForward];
+//        }
+
+        return 0;
+    }
+
+
+    double findNextSetPointUp(double under) {
+
+        int i = 0;
+        while (ramp[i] < under) {
+            i++;
+        }
+        i = Math.min(Math.max(0, i), 40);
+
+        return ramp[i];
+    }
 }

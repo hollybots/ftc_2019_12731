@@ -16,10 +16,10 @@ public class BlinkinBling  {
     public BlinkinBling(HardwareMap hardwareMap)
     {
         try {
-            blinkinModule = hardwareMap.get(Servo.class, "blinkin");
+            blinkinModule = hardwareMap.get(Servo.class, "bling");
         } catch (Exception e) {
             blinkinModule = null;
-            Log.d("TELEOP: ", "not null!!!");
+            Log.d("BOTBASE: ", "Cannot intialize Bling");
         }
     }
 
@@ -30,7 +30,7 @@ public class BlinkinBling  {
 
     public void  setBlinkinPattern(double patternNo) {
         if ( blinkinModule != null ) {
-            Log.d("TELEOP: ", "not null!!!");
+            Log.d("BOTBASE: ", "Cannot setPattern");
             blinkinModule.setPosition(patternNo);
         }
     }

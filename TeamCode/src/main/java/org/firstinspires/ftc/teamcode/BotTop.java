@@ -25,26 +25,28 @@ public class BotTop {
     static final double SPEED_COIL                          = 0.5;
     static final int    COIL_UP_DIRECTION                   = 1;
     static final int    COIL_DOWN_DIRECTION                 = -1;
-    static final double COIL_UP_COMMAND                     = -0.99;
-    static final double COIL_DOWN_COMMAND                   = 0.99;
+    static final double COIL_UP_COMMAND                     = 0.99;
+    static final double COIL_DOWN_COMMAND                   = -0.99;
     static final int    COIL_IDLE_DIRECTION                  = 0;
 
     static final double SPEED_SWING                         = 0.2;
     static final int    SWING_UP_DIRECTION                  = -1;
     static final int    SWING_DOWN_DIRECTION                = 1;
-    static final double SWING_UP_COMMAND                    = -0.99;
-    static final double SWING_DOWN_COMMAND                  = 0.99;
+    static final double SWING_UP_COMMAND                    = 0.99;
+    static final double SWING_DOWN_COMMAND                  = -0.99;
     static final int    SWING_IDLE_DIRECTION                = 0;
 
-    static final double POS_OPEN_CLAW_RIGHT                     = 0.0;
+    static final double POS_OPEN_CLAW_RIGHT                     = 0.25;
     static final double POS_CLOSE_CLAW_RIGHT                    = 0.5;
-    static final double POS_OPEN_CLAW_LEFT                      = 0.99;
+    static final double POS_OPEN_CLAW_LEFT                      = 0.74;
     static final double POS_CLOSE_CLAW_LEFT                     = 0.4;
 
-    static final double POS_PIN_UP_RIGHT                    = 0.0;
-    static final double POS_PIN_DOWN_RIGHT                  = 0.7;
-    static final double POS_PIN_UP_LEFT                     = 0.0;
-    static final double POS_PIN_DOWN_LEFT                   = 0.65;
+    static final double POS_PIN_UP_RIGHT                    = 0.75;
+    static final double POS_PIN_DOWN_RIGHT                  = 0.3;
+    static final double POS_PIN_UP_LEFT                     = 0.35;
+    static final double POS_PIN_DOWN_LEFT                   = 0.8;
+
+    static final double POWER_SLIDE                         = 0.5;
 
 
 
@@ -81,6 +83,9 @@ public class BotTop {
 
     DigitalChannel coilLimitUp = null;
     DigitalChannel coilLimitDown = null;
+
+
+    DigitalChannel backLimit = null;
 
 
     /**
@@ -128,7 +133,7 @@ public class BotTop {
          */
         try {
             linearMotionCoil = hardwareMap.get(DcMotor.class, "linear_motion_coil");
-            linearMotionCoil.setDirection(DcMotor.Direction.FORWARD);
+            linearMotionCoil.setDirection(DcMotor.Direction.REVERSE);
             linearMotionCoil.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
         catch (Exception e) {
@@ -257,14 +262,14 @@ public class BotTop {
         if (rackAndPinionSlide == null ) {
             return;
         }
-        rackAndPinionSlide.setPower(-0.5);
+        rackAndPinionSlide.setPower(POWER_SLIDE);
     }
 
     public void slideDown() {
         if (rackAndPinionSlide == null ) {
             return;
         }
-        rackAndPinionSlide.setPower(0.5);
+        rackAndPinionSlide.setPower(-POWER_SLIDE);
     }
 
     public void stopSlide() {
@@ -309,7 +314,7 @@ public class BotTop {
      *
      * @return
      */
-    private boolean isSwingLimitUp() {
+    public boolean isSwingLimitUp() {
         if (swingLimitUp == null) {
             return false;
         }
@@ -322,7 +327,7 @@ public class BotTop {
      *
      * @return
      */
-    private boolean isSwingLimitDown() {
+    public boolean isSwingLimitDown() {
         if (swingLimitDown == null) {
             return false;
         }
@@ -338,19 +343,18 @@ public class BotTop {
      * If the limit condition is met, the motor is stopped
      * @return
      */
-    private boolean isArmAtLimit() {
-        if (armMovementDirection == SWING_UP_DIRECTION  && isSwingLimitUp()) {
+    public boolean isArmAtLimit() {
+        if (armMovementDirection != SWING_DOWN_DIRECTION  && isSwingLimitUp()) {
             armMovementDirection = SWING_IDLE_DIRECTION;
             armLiftSwing.setPower(0.0);
             return true;
         }
 
-        if (armMovementDirection == SWING_DOWN_DIRECTION  && isSwingLimitDown()) {
+        if (armMovementDirection != SWING_UP_DIRECTION  && isSwingLimitDown()) {
             armMovementDirection = SWING_IDLE_DIRECTION;
             armLiftSwing.setPower(0.0);
             return true;
         }
-
         return false;
     }
 
@@ -383,7 +387,7 @@ public class BotTop {
         }
 
         if (!isArmAtLimit()) {
-            linearMotionCoil.setPower(armMovementDirection * SPEED_SWING);
+            armLiftSwing.setPower(armMovementDirection * SPEED_SWING);
         }
 
     }
@@ -400,7 +404,7 @@ public class BotTop {
      *
      * @return
      */
-    private boolean isCoilLimitUp() {
+    public boolean isCoilLimitUp() {
 
         if (coilLimitUp == null) {
             return false;
@@ -416,7 +420,7 @@ public class BotTop {
      *
      * @return
      */
-    private boolean isCoilLimitDown() {
+    public boolean isCoilLimitDown() {
 
         if (coilLimitDown == null) {
             return false;
@@ -435,15 +439,15 @@ public class BotTop {
      * If the limit condition is met, the motor is stopped
      * @return
      */
-    private boolean isCoilAtLimit() {
+    public boolean isCoilAtLimit() {
 
-        if (coilMovementDirection == COIL_UP_DIRECTION  && isCoilLimitUp()) {
+        if (coilMovementDirection != COIL_DOWN_DIRECTION  && isCoilLimitUp()) {
             coilMovementDirection = COIL_IDLE_DIRECTION;
             linearMotionCoil.setPower(0.0);
             return true;
         }
 
-        if (coilMovementDirection == COIL_DOWN_DIRECTION  && isCoilLimitDown()) {
+        if (coilMovementDirection != COIL_UP_DIRECTION  && isCoilLimitDown()) {
             coilMovementDirection = COIL_IDLE_DIRECTION;
             linearMotionCoil.setPower(0.0);
             return true;
@@ -470,10 +474,10 @@ public class BotTop {
             return;
         }
 
-        if ( (command < 0) || (command == COIL_UP_COMMAND) ) {
+        if ( (command > 0) || (command == COIL_UP_COMMAND) ) {
             coilMovementDirection = COIL_UP_DIRECTION;
         }
-        else if ((command > 0) || (command == COIL_DOWN_COMMAND)) {
+        else if ((command < 0) || (command == COIL_DOWN_COMMAND)) {
             coilMovementDirection = COIL_DOWN_DIRECTION;
         }
         else {
