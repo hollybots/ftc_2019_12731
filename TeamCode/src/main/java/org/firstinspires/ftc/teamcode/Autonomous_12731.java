@@ -258,8 +258,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         // slide up
         slideByTime(300,  botTop.POWER_SLIDE);
         botTop.swing(BotTop.SWING_DOWN_COMMAND);
-//        currentState = STATE_travelToBuildSite;
-        currentState = STATE_idle;
+        currentState = STATE_travelToBuildSite;
+//        currentState = STATE_idle;
         return;
     }
 
@@ -270,6 +270,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void dropOffStoneState() {
         botTop.openClaw();
+        moveForward(4.0, 0.6);
         moveXInchesFromBackObject(12.0, 100000, 0.6);
         currentState = STATE_parkUnderBridge;
         return;

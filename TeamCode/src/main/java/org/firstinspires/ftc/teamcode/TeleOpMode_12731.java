@@ -192,14 +192,14 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         // push joystick2 to the right to rotate clockwise
 
 
-        double forward                  = -gamepad1.right_stick_y;
-        double right                    = gamepad1.right_stick_x;
+        double forward                  = -gamepad1.left_stick_y;
+        double right                    = gamepad1.left_stick_x;
         WheelPower wheels               = null;
 
         double now                      = runtime.milliseconds();
         double deltaT                   = now - lastTimeWeCheckedSpeed;
 
-        double clockwise                = gamepad1.left_stick_x;
+        double clockwise                = gamepad1.right_stick_x;
 
         double slideUp          = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
         double slideDown        = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
@@ -209,7 +209,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         double arm                  = -gamepad2.right_stick_y;
         double linearMotion         = -gamepad2.left_stick_y;
 
-        boolean isPressedClampingButton     = gamepad1.right_stick_button;
+        boolean isPressedClampingButton     = gamepad2.right_stick_button;
         boolean toggledClamp                = false;
 
         boolean blinkinOff                  =  gamepad1.dpad_up;
@@ -220,13 +220,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         boolean reset                       =  gamepad2.x;
         boolean ready                       =  gamepad2.y;
 
-
-        if (deltaT > DELTA_T ) {
-            forward                     = rampUp(CONTROL_FORWARD, forward);
-            wheels                      = calcWheelPower(K, clockwise, forward, right);
-            lastTimeWeCheckedSpeed      = now;
-        }
-
+        wheels                              = calcWheelPower(K, clockwise, forward, right);
 
         // don't allow any other command aside  of propulsion while robot is resetting
         if (resetState > 0) {
@@ -313,15 +307,13 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         /**
          * OUTPUT PROPULSION
          */
-        if (deltaT > DELTA_T && wheels != null) {
-            // Send calculated power to wheels
-            botBase.getFrontLeftDrive().setPower(wheels.front_left);
-            botBase.getFrontRightDrive().setPower(wheels.front_right);
-            botBase.getRearLeftDrive().setPower(wheels.rear_left);
-            botBase.getRearRightDrive().setPower(wheels.rear_right);
+        // Send calculated power to wheels
+        botBase.getFrontLeftDrive().setPower(wheels.front_left);
+        botBase.getFrontRightDrive().setPower(wheels.front_right);
+        botBase.getRearLeftDrive().setPower(wheels.rear_left);
+        botBase.getRearRightDrive().setPower(wheels.rear_right);
 
-            dbugThis(String.format("%.02f,%.02f,%.02f,%.02f", wheels.front_left,wheels.front_right,wheels.rear_left,wheels.rear_right));
-        }
+        dbugThis(String.format("%.02f,%.02f,%.02f,%.02f", wheels.front_left,wheels.front_right,wheels.rear_left,wheels.rear_right));
 
 
         /**

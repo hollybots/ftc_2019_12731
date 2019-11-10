@@ -64,11 +64,13 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
 
     protected void travelToBuildSiteState() {
+        botBase.setBling(LED_TEAM_COLORS3);
         moveXInchesFromBackObject(12.0, 100000, 0.4);
         gotoHeading(0);
-        //moveRight(72.0 - distanceLeft.getDistance(DistanceUnit.INCH) - DISTANCE_LEFT_SENSORS, 0.6);
-        double toGo = 72.0 - distanceLeft.getDistance(DistanceUnit.INCH) - DISTANCE_LEFT_SENSORS;
-        dbugThis("Will be traveling right for " + toGo + " inches");
+        justWait(500);
+        double toGo = 100.0 - getValidDistance(distanceLeft) - DISTANCE_LEFT_SENSORS;
+        moveRight(toGo, 0.4);
+        dbugThis("Traveling right for " + toGo + " inches");
         currentState = STATE_dropOffStone;
         return;
     }
@@ -76,7 +78,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
     protected void travelHomeState() {
         gotoHeading(0);
-        moveXInchesFromLeftObject(9.0, 5000,0.8);
+        moveXInchesFromLeftObject(9.0, 5000,0.5);
         gotoHeading(0);
         currentState = STATE_moveToStones;
         return;
@@ -85,8 +87,8 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
     protected void parkUnderBridgeState() {
         gotoHeading(0);
-        moveXInchesFromBackObject(12.0, 5000,1.0);
-        moveLeftByTime(2000, 1.0);
+        moveXInchesFromBackObject(12.0, 5000,0.5);
+        moveLeft(20.0, 0.5);
         currentState = STATE_done;
         return;
     }

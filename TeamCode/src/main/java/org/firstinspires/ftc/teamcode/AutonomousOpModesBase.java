@@ -99,6 +99,12 @@ public class AutonomousOpModesBase extends LinearOpMode {
     static final double     P_DRIVE_COEFF           = 0.15;     // Larger is more responsive, but also less stable
 
 
+    static final double  LED_TEAM_COLORS1               = 0.6545;  // Sinelon, Color 1 and 2
+    static final double  LED_TEAM_COLORS2               = 0.6295;  // End to End Blend
+    static final double  LED_TEAM_COLORS3               = 0.6045;  // Sparkle, Color 1 on Color 2
+    static final double  LED_TEAM_COLORS4               = 0.6195;  // Beats per Minute, Color 1 and 2
+
+
     /**
      * NAVIGATION CONSTANTS
      */
@@ -469,7 +475,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public void moveXInchesFromLeftObject(double x, double ms, double power) {
 
-        if (distanceLeft != null && distanceLeft.getDistance(DistanceUnit.INCH) < x ) {
+        if (distanceLeft != null && getValidDistance(distanceLeft) < x ) {
             return;
         }
 
@@ -480,7 +486,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.LEFT) &&
             runtime.milliseconds() < limit &&
-                    distanceLeft != null && distanceLeft.getDistance(DistanceUnit.INCH) > x
+                    distanceLeft != null && getValidDistance(distanceLeft) > x
         ) {
             autonomousIdleTasks();
         }
@@ -498,7 +504,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public void moveXInchesFromRightObject(double x, double ms, double power) {
 
-        if (distanceRight != null && distanceRight.getDistance(DistanceUnit.INCH) < x ) {
+        if (distanceRight != null && getValidDistance(distanceRight) < x ) {
             dbugThis("Getting out of here");
             return;
         }
@@ -510,7 +516,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.RIGHT) &&
             runtime.milliseconds() < limit &&
-                    distanceRight != null && distanceRight.getDistance(DistanceUnit.INCH) > x
+                    distanceRight != null && getValidDistance(distanceRight) > x
         ) {
             autonomousIdleTasks();
         }
@@ -528,7 +534,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public void moveXInchesFromFrontObject(double x, double ms, double power) {
 
-        if (distanceFront != null && distanceFront.getDistance(DistanceUnit.INCH) < x ) {
+        if (distanceFront != null && getValidDistance(distanceFront)  < x ) {
             return;
         }
 
@@ -539,7 +545,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.FORWARD) &&
             runtime.milliseconds() < limit &&
-            distanceFront != null && distanceFront.getDistance(DistanceUnit.INCH) > x
+            distanceFront != null && getValidDistance(distanceFront) > x
         ) {
             autonomousIdleTasks();
         }
@@ -557,7 +563,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public void moveXInchesFromBackObject(double x, double ms, double power) {
 
-        if (distanceBack != null && distanceBack.getDistance(DistanceUnit.INCH) < x ) {
+        if (distanceBack != null && getValidDistance(distanceBack) < x ) {
             return;
         }
 
@@ -569,7 +575,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
             !isHittingSomething(TravelDirection.BACKWARD) &&
             !isCollidingWithBackObject() &&
             runtime.milliseconds() < limit &&
-            distanceBack != null && distanceBack.getDistance(DistanceUnit.INCH) > x
+            distanceBack != null && getValidDistance(distanceBack)  > x
         ) {
             autonomousIdleTasks();
         }
@@ -1032,6 +1038,25 @@ public class AutonomousOpModesBase extends LinearOpMode {
         }
 
         return !(backCollision.getState() == true );
+    }
+
+
+    public double getValidDistance(ModernRoboticsI2cRangeSensor sensor) {
+
+        if (sensor == null) {
+            return 0;
+        }
+
+        double limit = runtime.milliseconds() + 200;
+
+        double validDistance = 0;
+        while ( opModeIsActive() &&
+                runtime.milliseconds() < limit &&
+                (validDistance = sensor.getDistance(DistanceUnit.INCH)) == DistanceSensor.distanceOutOfRange )  {
+            autonomousIdleTasks();
+        }
+
+        return validDistance;
     }
 
 }
