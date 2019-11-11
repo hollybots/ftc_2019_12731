@@ -51,6 +51,8 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
     Servo servoClaw = null;
     CRServo servoLinear = null;
+    Servo servoClaw2 = null;
+    CRServo servoLift = null;
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -73,6 +75,8 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         telemetry.addData("Status", "Initialized");
         servoLinear  = hardwareMap.get(CRServo.class, "servoLinear");
         servoClaw  = hardwareMap.get(Servo.class, "servoClaw");
+        servoClaw2 = hardwareMap.get(Servo.class, "servoClaw2");
+        servoLift = hardwareMap.get(CRServo.class, "servoLift");
         telemetry.update();
     }
 
@@ -134,11 +138,13 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         if(gamepad2.right_bumper == true){
             servoClaw.setPosition(0);
+            servoClaw2.setPosition(0);
 
         }
 
         if(gamepad2.left_bumper == true && gamepad2.right_bumper != true){
             servoClaw.setPosition(1);
+            servoClaw2.setPosition(1);
         }
 
         // Now add a tuning constant K for the “rotate” axis sensitivity.
