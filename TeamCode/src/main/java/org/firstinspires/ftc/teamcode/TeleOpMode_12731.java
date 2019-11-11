@@ -222,22 +222,23 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         wheels                              = calcWheelPower(K, clockwise, forward, right);
 
+        botTop.checkAllLimitSwitches();
+
         // don't allow any other command aside  of propulsion while robot is resetting
         if (resetState > 0) {
             maybeEndResetSequence();
         }
+
+        if (readyState > 0) {
+            maybeEndReadySequence();
+        }
+
         // If we aske for reset, we start the sequence here
         if (resetState == 0 && reset ) {
             startResetSequence();
         }
 
         if (resetState == 0) {
-
-            // don't allow any other command aside  of propulsion while robot is resetting
-            if (readyState > 0) {
-                maybeEndResetSequence();
-            }
-
             // If we aske for reset, we start the sequence here
             if (readyState == 0 && ready ) {
                 startReadySequence();
@@ -361,6 +362,10 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     }
 
     private void startResetSequence() {
+
+        if (botTop.isSwingLimitDown()) {
+            return;
+        }
         resetState = 1;
         botTop.coil(BotTop.COIL_DOWN_COMMAND);
         botTop.slideDown();
@@ -372,21 +377,15 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     private void maybeEndReadySequence(){
 
         // If the coil is completely down, start moving down the arm
-        if ( botTop.isSwingLimitUp() && resetState == 1 ) {
-            resetState = 0;
-            return;
+        if ( botTop.isSwingLimitUp() && readyState == 1 ) {
+            readyState = 0;
         }
     }
 
     private void startReadySequence() {
 
-        // If the coil is not down, ignore the sequence
-        if ( !botTop.isCoilLimitDown() ) {
-            return;
-        }
-
         botTop.swing(BotTop.SWING_UP_COMMAND);
-        resetState = 1;
+        readyState = 1;
         botTop.slideDown();
         botTop.clampRelease();
         botTop.openClaw();
