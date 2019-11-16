@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.BotBase;
 
 
 
@@ -111,6 +112,10 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     // State variables
     boolean isClamping                                  = false;
     boolean waitForClampingButtonRelease                = false;
+
+
+    boolean isFastSpeedMode                                  = false;
+    boolean waitForSpeedButtonRelease                        = false;
 
 
 
@@ -206,6 +211,9 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         boolean isPressedClampingButton     = gamepad2.right_stick_button;
         boolean toggledClamp                = false;
 
+        boolean isPressedSpeedButton     = gamepad1.right_stick_button;
+        boolean toggledSpeed             = false;
+
         boolean blinkinOff                  =  gamepad1.dpad_up;
         boolean blinkin1                    =  gamepad1.dpad_down;
         boolean blinkin2                    =  gamepad1.dpad_left;
@@ -296,7 +304,33 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             } else {
                 botTop.clampRelease();
             }
+
+
+
+            //to toggle speed
+            if (isPressedSpeedButton) {
+                waitForSpeedButtonRelease = true;
+            } else if (waitForSpeedButtonRelease) {
+                waitForSpeedButtonRelease = false;
+                toggledSpeed = true;
+            }
+
+            if (toggledSpeed && isFastSpeedMode) {
+                isFastSpeedMode = false;
+            } else if (toggledSpeed && !isFastSpeedMode) {
+                isFastSpeedMode = true;
+            }
+            if (!isFastSpeedMode) {
+                wheels.front_left /= 2;
+                wheels.front_right /= 2;
+                wheels.rear_left /= 2;
+                wheels.rear_right /= 2;
+            }
         }
+
+
+
+
 
 
         /**
