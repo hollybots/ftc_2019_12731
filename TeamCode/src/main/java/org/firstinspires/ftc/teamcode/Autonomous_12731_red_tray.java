@@ -29,7 +29,7 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
         gotoHeading(0);
         double currentDistanceLeft = distanceLeft.getDistance(DistanceUnit.INCH);
         moveRight(68.0 - currentDistanceLeft + DISTANCE_LEFT_SENSORS, 0.5);
-        currentState = STATE_parkUnderBridge;
+        currentState = STATE_done;
     }
 
 }
