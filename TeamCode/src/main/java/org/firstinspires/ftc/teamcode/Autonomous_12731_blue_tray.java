@@ -31,7 +31,7 @@ public class Autonomous_12731_blue_tray extends Autonomous_12731 {
         gotoHeading(0);
         double currentDistanceRight = getValidDistance(distanceRight);
         moveLeft(68.0 - currentDistanceRight + DISTANCE_RIGHT_SENSORS, 0.5);
-        currentState = STATE_idle;
+        currentState = STATE_done;
     }
 
 }
