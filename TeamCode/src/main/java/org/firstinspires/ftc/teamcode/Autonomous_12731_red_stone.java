@@ -16,8 +16,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
     public void initAutonomous() {
 
         super.initAutonomous();
-//        currentState = STATE_getCloseEnoughToPickup;
-        currentState = STATE_moveToStones;
+        currentState = STATE_parkUnderBridge;
     }
 
     /**
@@ -70,7 +69,6 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
         justWait(500);
         double toGo = 100.0 - getValidDistance(distanceLeft) - DISTANCE_LEFT_SENSORS;
         moveRight(toGo, 0.4);
-        dbugThis("Traveling right for " + toGo + " inches");
         currentState = STATE_dropOffStone;
         return;
     }
@@ -86,9 +84,10 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
 
     protected void parkUnderBridgeState() {
-        gotoHeading(0);
-        moveXInchesFromBackObject(12.0, 5000,0.5);
-        moveLeft(20.0, 0.5);
+        //gotoHeading(0);
+        //moveXInchesFromBackObject(12.0, 5000,0.5);
+        moveForward(18.0, 0.5);
+        moveRight(24.0, 0.5);
         currentState = STATE_done;
         return;
     }

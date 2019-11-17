@@ -288,6 +288,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void clampTrayState() {
 
         botTop.clampOn();
+        justWait(500);
         botBase.setBling(BLING_MODE_CLAMP);
         currentState = STATE_moveTrayBack;
     }
@@ -295,7 +296,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected void moveTrayBackState() {
 
-        moveXInchesFromFrontObject(2.0, 10000, 0.5);
+        moveXInchesFromFrontObject(3.0, 10000, 0.3);
         botTop.clampRelease();
         justWait(500);
         currentState = STATE_parkUnderBridge;

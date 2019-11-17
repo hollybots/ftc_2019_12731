@@ -19,8 +19,10 @@ public class Autonomous_12731_blue_tray extends Autonomous_12731 {
 
         moveBackward(4, 0.5);
         moveXInchesFromRightObject(24.0 - DISTANCE_RIGHT_SENSORS, 6000, 0.5);
-        moveBackwardByTime(10000, 0.5);
+        moveBackwardByTime(10000, 0.3);
+        justWait(500);
         currentState = STATE_clampTray;
+
     }
 
 
