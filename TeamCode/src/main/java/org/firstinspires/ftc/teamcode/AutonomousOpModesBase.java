@@ -167,7 +167,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     public BotBase botBase              = null;
     public BotTop botTop                = null;
 
-    /* Vumaark spotting
+    /* VuMark detection
      */
     protected VuMarkIdentification vuMark  = null;
 
@@ -285,8 +285,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * turn()
-     *
      * This function will add the angle passed in parameter to the current heading
      *
      * @param angle:    degrees to add to the current heading
@@ -309,9 +307,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * stopMoving()
-     *
-     * This function stops all motors simultaneously
+     * This function stops all propulstion motors simultaneously
      */
     protected void stopMoving() {
         botBase.stop();
@@ -321,9 +317,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * gotoHeading()
-     *
-     * Use the Guro to turn until heading is equal to the angle passed in parameter
+     * Use the Gyro to turn until heading is equal to the angle passed in parameter
      *
      * @param angle         : Final heading in degrees
      */
@@ -346,7 +340,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * This function moves the robot at the given angle until it reaches the final Destination.
      * angleInRadians is ALWAYS the angle between the desired direction and the direction the robot is facing.
      *
-     * Thie method MUST be called within a control loop.
+     * WARNING ***************  This method MUST be called INSIDE a control loop. ********************
      *
      * @param angleInRadians
      */
@@ -385,9 +379,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveRight()
-     *
+     * Moves Right for the given distance, and using the given power
      * @param distance: in inches
+     * @param power: motor power
      */
     protected void moveRight(double distance, double power)
     {
@@ -395,9 +389,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveLeft()
-     *
+     * Moves Left for the given distance, and using the given power
      * @param distance: in inches
+     * @param power: motor power
      */
     protected void moveLeft(double distance, double power)
     {
@@ -405,9 +399,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveBackward()
-     *
+     * Moves Backward for the given distance, and using the given power
      * @param distance: in inches
+     * @param power: motor power
      */
     protected void moveBackward(double distance, double power)
     {
@@ -415,7 +409,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveForward()
+     * Moves Forward for the given distance, and using the given power
+     * @param distance: in inches
+     * @param power: motor power
      *
      * @param distance: in inches
      */
@@ -426,9 +422,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * moveRight()
+     * Powers up the propulsion to move Right for a period of time, and at a given power
+     * @param ms: in milliseconds
+     * @param power: motor power
      *
-     * @param ms: Number of milliseconds to keep the motos moving
      */
     protected void moveRightByTime(int ms, double power)
     {
@@ -436,9 +433,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveLeft()
+     * Powers up the propulsion to move Left for a period of time, and at a given power
+     * @param ms: in milliseconds
+     * @param power: motor power
      *
-     * @param ms: Number of milliseconds to keep the motos moving
      */
     protected void moveLeftByTime(int ms, double power)
     {
@@ -446,9 +444,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveBackward()
+     * Powers up the propulsion to move Back for a period of time, and at a given power
      *
-     * @param ms: Number of milliseconds to keep the motos moving
+     * @param ms: in milliseconds
+     * @param power: motor power
+     *
      */
     protected void moveBackwardByTime(int ms, double power)
     {
@@ -456,9 +456,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * moveForward()
+     * Powers up the propulsion to move Forward for a period of time, and at a given power
      *
-     * @param ms: Number of milliseconds to keep the motos moving
+     * @param ms: in milliseconds
+     * @param power: motor power
+     *
      */
     protected void moveForwardByTime(int ms, double power)
     {
@@ -468,7 +470,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * This method moves the robot left until it is x inches from an object
+     * Powers up the propulsion to move Left until it is x inches from an object
+     *
      * @param x
      * @param ms
      * @param power
@@ -497,7 +500,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * This method moves the robot left until it is x inches from an object
+     * Powers up the propulsion to move Right until it is x inches from an object
+     *
      * @param x
      * @param ms
      * @param power
@@ -527,7 +531,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * This method moves the robot forward until it is x inches from an object
+     * Powers up the propulsion to move Forward until it is x inches from an object
+     *
      * @param x
      * @param ms
      * @param power
@@ -556,7 +561,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * This method moves the robot backward until it is x inches from an object
+     * Powers up the propulsion to move Back until it is x inches from an object
+     *
      * @param x
      * @param ms
      * @param power
@@ -586,14 +592,13 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     *  move()
-     *
-     *  The robot will move in either 4 direction for ms amount of time or until oriented whichever comes first
+     *  Moves the robot in either 4 direction for ms amount of time OR until oriented whichever comes first
      *  if the untilOriented flag is set to true.  If untilOriented is set to false, motor will move according
      *  to time limit only.
      *
      * @param direction             : FORWARD,BACKWARD,LEFT,RIGHT
      * @param ms                    : Limit of time the motos will be in motion
+     * @param power                 : Motor power
      * @param untilRealigned         : The robot will move until oriented
      */
     private void move(TravelDirection direction, double ms, double power, boolean untilRealigned) {
@@ -627,12 +632,13 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * The method will power the wheels to go in the right direction.
-     * Be careful, nothing stops the robot, you need to combine this function with a control
-     * loop.
+     * Powers the propulsion to go in either 4 directions
      *
      * @param direction
      * @param power
+     *
+     * WARNING ***************  This method MUST be called INSIDE a control loop. ********************
+     *
      */
     protected void powerPropulsion(TravelDirection direction, double power) {
 
@@ -740,9 +746,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * isStalled()
-     *
-     * This method determine if the robot is stalled by checking every 2 seconds if is has moved significantly.  It uses
+     * Determines if the robot is stalled by checking every 2 seconds if is has moved significantly.  It uses
      * class properties to keep track of current and previous positions, and it accrues the stallProbability each time it failed
      * to detect movement.  stallProbability is reset whenever movement is detected.
      *
@@ -750,16 +754,13 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @return true|false
      */
-    protected boolean isStalled()
+    private boolean isStalled()
     {
-
         return false;
-
     }
 
 
     /**
-     * hasMovedSignificantly()
      *
      * Returns true if the robot has moved given its previous and last positions.  This function is used to determine if the bot is
      * stalled.
@@ -781,11 +782,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * isPositionWithinAcceptableTargetRange()
      *
      * @param currentPlacement
      * @param finalDestination
      * @return              : true if position is within target range according to the rule ERROR_POSITION_COUNT
+     *
      */
     public boolean isPositionWithinAcceptableTargetRange(FieldPlacement currentPlacement, FieldPlacement finalDestination)
     {
@@ -795,12 +796,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
 
-
-
-
     /**
-     * onHeading()
-     *
      * Performs one cycle of closed loop heading control.
      *
      * @param speed     Desired speed of turn.
@@ -839,23 +835,17 @@ public class AutonomousOpModesBase extends LinearOpMode {
         botBase.getFrontRightDrive().setPower(rightSpeed);
         botBase.getRearRightDrive().setPower(rightSpeed);
 
-        // Display it for the driver.
-//        dbugThis(String.format("Target: %5.2f", angle));
-//        dbugThis(String.format("Err/St: %5.2f/%5.2f", error, steer));
-//        dbugThis(String.format("Speed : %5.2f:%5.2f", leftSpeed, rightSpeed));
-
         return onTarget;
     }
 
 
     /**
-     * getHeadingError()
-     *
      * Determines the error between the target angle and the robot's current heading
      *
      * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
      * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
      *          +ve error means the robot should turn LEFT (CCW) to reduce error.
+     *
      */
     public double getHeadingError(double targetAngle) {
 
@@ -865,26 +855,22 @@ public class AutonomousOpModesBase extends LinearOpMode {
         Orientation angles   = gyro.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         actualAngle = AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle));
 
-//        dbugThis("Turning: Stuck at heading: " + actualAngle);
-
         // calculate error in -179 to +180 range  (
         robotError = targetAngle - actualAngle;
         while (robotError > 180)  robotError -= 360;
         while (robotError <= -180) robotError += 360;
 
-//        dbugThis("error is : " + robotError);
         return robotError;
     }
 
 
     /**
-     * getSteer()
-     *
      * Returns desired steering force.  +/- 1 range.  +ve = steer left
      *
      * @param error   Error angle in robot relative degrees
      * @param PCoeff  Proportional Gain Coefficient
-     * @return
+     * @return steer
+     *
      */
     public double getSteer(double error, double PCoeff) {
 
@@ -897,7 +883,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      * @param clazz :
      * @param <T>
-     * @return
+     * @return value
      */
 
     public static <T extends Enum<?>> T randomEnum(Class<T> clazz){
@@ -909,9 +895,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * justWait()
      *
-     * Just like that.  This function does nothing but wait while allowing to other processes to run
+     * This function does nothing but wait while allowing to other processes to run
      *
      * @param ms       : any number of milliseconds.  Can be less than 1
      *
@@ -928,6 +913,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
         }
     }
 
+
+    /**
+     * Logs a string to the LogCat Window
+     * @param s
+     */
     void dbugThis(String s) {
 
         if ( DEBUG == true ) {
@@ -936,12 +926,12 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
     /**
-     * isHittingSomething()
      *
-     * Given a direction, it will return true if the robot is too close
+     * Given a direction, returns true if the robot is too close
      *
      * @param direction
-     * @return
+     * @return bool
+     *
      */
     public boolean isHittingSomething(TravelDirection direction) {
 
@@ -949,14 +939,27 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
 
+    /**
+     * Always insert this function inside control loop as it checks the emergency situations related to limit switches and collisions and acts
+     * consequently.
+     */
     protected void autonomousIdleTasks() {
 
         botTop.checkAllLimitSwitches();
         idle();
     }
 
-
-    public int timeToMoveInMs(TravelDirection direction, double power, double displacementInInches) {
+    /**
+     * Given a direction, and the power level of the motor, this function will return the amount
+     * of time required to power the propulsion to travel the required displacement in inches
+     *
+     * @param direction
+     * @param power
+     * @param displacementInInches
+     * @return amount of milliseconds in inces
+     *
+     */
+    private int timeToMoveInMs(TravelDirection direction, double power, double displacementInInches) {
 
         if (direction == TravelDirection.LEFT || direction == TravelDirection.RIGHT ) {
             if (power <= 0.2) {
@@ -1008,8 +1011,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * Check the state of the limit switch and the direction of the movement
-     * as kept in the state variable propulsionDirection.  It returns true if
+     * Checks the state of the back limit switch and the direction of the movement
+     * as kept in the state variable _propulsionDirection_  It returns true if
      * the limit condition is met.
      *
      * If the limit condition is met, the motor is stopped
@@ -1041,6 +1044,14 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
 
+    /**
+     * MR distance sensors tend to return bogus values once in a while.  This function makes sure filter out these values
+     * by waiting for the next valid value.
+     *
+     * @param sensor
+     * @return
+     *
+     */
     public double getValidDistance(ModernRoboticsI2cRangeSensor sensor) {
 
         if (sensor == null) {
@@ -1057,6 +1068,23 @@ public class AutonomousOpModesBase extends LinearOpMode {
         }
 
         return validDistance;
+    }
+
+
+    /**
+     * Powers up the rack and pinion CR servo a cerin mount of time
+     * @param ms
+     * @param power
+     */
+    protected void slideByTime(int ms, double power) {
+
+        double limit = runtime.milliseconds() + ms;
+
+        botTop.getSlide().setPower(power);
+        while (opModeIsActive() &&  runtime.milliseconds() < limit) {
+            autonomousIdleTasks();
+        }
+        botTop.getSlide().setPower(0.0);
     }
 
 }

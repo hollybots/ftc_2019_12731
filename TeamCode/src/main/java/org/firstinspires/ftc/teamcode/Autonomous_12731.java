@@ -306,15 +306,4 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         // implement in alliance specific
     }
 
-
-    public void slideByTime(int ms, double power) {
-
-        double limit = runtime.milliseconds() + ms;
-
-        botTop.getSlide().setPower(power);
-        while (opModeIsActive() &&  runtime.milliseconds() < limit) {
-            autonomousIdleTasks();
-        }
-        botTop.getSlide().setPower(0.0);
-    }
 }

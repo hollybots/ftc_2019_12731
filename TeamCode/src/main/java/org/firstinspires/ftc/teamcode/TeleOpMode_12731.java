@@ -424,7 +424,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         WheelPower wheels                    = new WheelPower();
 
-        // Now add a tuning constant K for the “rotate” axis sensitivity.
+        // Now add a tuning constant K for the rotate axis sensitivity.
         // Start with K=0, and increase it very slowly (do not exceed K=1)
         // to find the right value after you’ve got fwd/rev and strafe working:
         clockwise = K * clockwise;

@@ -85,7 +85,6 @@ public class Autonomous_12731_blue_stone extends Autonomous_12731 {
 
     protected void parkUnderBridgeState() {
         gotoHeading(0);
-        moveXInchesFromBackObject(12.0, 5000, 0.5);
         moveRight(20.0, 0.5);
         currentState = STATE_done;
         return;

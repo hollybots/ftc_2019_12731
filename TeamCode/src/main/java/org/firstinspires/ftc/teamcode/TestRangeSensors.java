@@ -178,7 +178,7 @@ public class TestRangeSensors extends TeleOpModesBase
         }
 
 
-        // Now add a tuning constant K for the “rotate” axis sensitivity.
+        // Now add a tuning constant K for the rotateAutonomous_12731 axis sensitivity.
         // Start with K=0, and increase it very slowly (do not exceed K=1)
         // to find the right value after you’ve got fwd/rev and strafe working:
         clockwise = K*clockwise;
