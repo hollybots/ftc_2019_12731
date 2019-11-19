@@ -19,7 +19,8 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
 
         moveBackward(4, 0.5);
         moveXInchesFromLeftObject(24.0 - DISTANCE_LEFT_SENSORS, 6000, 0.5);
-        moveBackwardByTime(10000, 0.5);
+        moveBackwardByTime(10000, 0.3);
+        justWait(500);
         currentState = STATE_clampTray;
     }
 
@@ -27,9 +28,9 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
     protected void parkUnderBridgeState() {
 
         gotoHeading(0);
-        double currentDistanceLeft = distanceLeft.getDistance(DistanceUnit.INCH);
+        double currentDistanceLeft = getValidDistance(distanceLeft);
         moveRight(68.0 - currentDistanceLeft + DISTANCE_LEFT_SENSORS, 0.5);
-        currentState = STATE_done;
+        currentState = STATE_idle;
     }
 
 }
