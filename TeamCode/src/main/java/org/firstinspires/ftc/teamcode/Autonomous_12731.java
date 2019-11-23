@@ -43,7 +43,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     // alignment
     protected static final double CAMERA_TO_CENTER               = 2.5;
 
-    protected static final double BLING_MODE_CLAMP               = 0.6545;
+    protected static final double BLING_MODE_CLAMP               = LED_TEAM_COLORS4;
+    protected static final double DISTANCE_TO_STONEWALL          = 12.0;
 
 
     @Override
@@ -154,7 +155,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         botTop.slideDown();
         botTop.openClaw();
         justWait(1000);
-        moveXInchesFromFrontObject(11.0, 10000, 0.2);
+        moveXInchesFromFrontObject(DISTANCE_TO_STONEWALL, 10000, 0.2);
         currentState = STATE_scanForStone;
         return;
     }
@@ -295,13 +296,9 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
 
     protected void moveTrayBackState() {
-
-        moveXInchesFromFrontObject(3.0, 10000, 0.3);
-        botTop.clampRelease();
-        justWait(500);
-        currentState = STATE_parkUnderBridge;
-//        currentState = STATE_idle;
+        // implement in alliance specific
     }
+
 
     protected void parkUnderBridgeState() {
         // implement in alliance specific

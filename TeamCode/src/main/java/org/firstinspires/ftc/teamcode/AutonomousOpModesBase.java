@@ -1058,9 +1058,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
             return 0;
         }
 
-        double limit = runtime.milliseconds() + 200;
-
-        double validDistance = 0;
+        double limit = runtime.milliseconds() + 500;
+        double validDistance = sensor.getDistance(DistanceUnit.INCH);
         while ( opModeIsActive() &&
                 runtime.milliseconds() < limit &&
                 (validDistance = sensor.getDistance(DistanceUnit.INCH)) == DistanceSensor.distanceOutOfRange )  {

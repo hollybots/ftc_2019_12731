@@ -34,10 +34,18 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
             return;
         }
 
-        moveXInchesFromLeftObject(9.0, 10000, 0.4);
-        boolean goingRight = false;
+        moveXInchesFromLeftObject(9.0, 10000, 0.5);
+        boolean goingRight = true;
+        boolean endOfStoneWall = false;
 
         while (opModeIsActive() && stoneRelativePlacement == null) {
+
+            gotoHeading(0);
+
+            endOfStoneWall = getValidDistance(distanceFront) > DISTANCE_TO_STONEWALL + 4.0;
+            if (endOfStoneWall) {
+                goingRight = !goingRight;
+            }
 
             stoneRelativePlacement = vuMark.find();
             if (stoneRelativePlacement != null) {
@@ -47,15 +55,10 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
                 return;
             }
             if ( goingRight ) {
-                gotoHeading(0);
-                moveLeftByTime(6000, 0.2);
+                powerPropulsion(TravelDirection.RIGHT,0.3);
             } else {
-                gotoHeading(0);
-                moveRightByTime(6000, 0.2);
+                powerPropulsion(TravelDirection.LEFT,0.3);
             }
-
-            goingRight = !goingRight;
-            telemetry.update();
         }
 
         return;
