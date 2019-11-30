@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.BotBase;
 
@@ -129,6 +130,8 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
     int resetState                                      = 0;
     int readyState                                      = 0;
+    int dodgeState                                      = 0;
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -200,31 +203,36 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         double clockwise                = gamepad1.right_stick_x;
 
-        double slideUp          = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
-        double slideDown        = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
-        boolean clawDown        = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
-        boolean clawUp          = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
+        double slideUp                  = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
+        double slideDown                = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
+        boolean clawDown                = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
+        boolean clawUp                  = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
 
-        double arm                  = -gamepad2.right_stick_y;
-        double linearMotion         = -gamepad2.left_stick_y;
+        double arm                      = -gamepad2.right_stick_y;
+        double linearMotion             = -gamepad2.left_stick_y;
 
         boolean isPressedClampingButton     = gamepad2.right_stick_button;
         boolean toggledClamp                = false;
 
-        boolean isPressedSpeedButton     = gamepad1.right_stick_button;
-        boolean toggledSpeed             = false;
+        boolean isPressedSpeedButton        = gamepad1.right_stick_button;
+        boolean toggledSpeed                = false;
 
         boolean blinkinOff                  =  gamepad1.dpad_up;
         boolean blinkin1                    =  gamepad1.dpad_down;
         boolean blinkin2                    =  gamepad1.dpad_left;
         boolean blinkin3                    =  gamepad1.dpad_right;
 
+        boolean onHeading0                  =  gamepad1.y;
+        boolean onHeading90                 =  gamepad1.x;
+
         boolean reset                       =  gamepad2.x;
         boolean ready                       =  gamepad2.y;
+        boolean dodge                       =  gamepad2.back;
 
         wheels                              = calcWheelPower(K, clockwise, forward, right);
 
         botTop.checkAllLimitSwitches();
+
 
         // don't allow any other command aside  of propulsion while robot is resetting
         if (resetState > 0) {
@@ -235,19 +243,29 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             maybeEndReadySequence();
         }
 
-        // If we aske for reset, we start the sequence here
-        if (resetState == 0 && reset ) {
-            startResetSequence();
+        if (dodgeState > 0) {
+            maybeEndDodgeSequence();
         }
 
-        if (resetState == 0) {
-            // If we aske for reset, we start the sequence here
-            if (readyState == 0 && ready ) {
+        // If no other sequences are playing, we can start a new one
+        if ( noSequenceIsCurrentlyExecuting() ) {
+
+            // If we ask for reset, we start the sequence here
+            if ( reset ) {
+                startResetSequence();
+            }
+
+            else if ( ready ) {
                 startReadySequence();
+            }
+
+            else if ( dodge ) {
+                startDodgeSequence();
             }
         }
 
-        if ( resetState == 0 && readyState == 0) {
+        // If in one of those pre-set sequence, bypoass all the other topBot commands
+        if ( noSequenceIsCurrentlyExecuting() ) {
 
             /**
              * OUTPUT LINEAR MOTION
@@ -257,7 +275,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             /**
              * OUTPUT SWIVEL ARM
              */
-            botTop.swing(arm);
+            botTop.swing(arm, false);
 
 
             /**
@@ -329,10 +347,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         }
 
 
-
-
-
-
         /**
          * OUTPUT PROPULSION
          */
@@ -374,31 +388,40 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         botBase.setBling(LED_OFF);
     }
 
+
+    private boolean noSequenceIsCurrentlyExecuting() {
+
+        return resetState == 0 && readyState == 0 && dodgeState == 0;
+    }
+
+
     private void maybeEndResetSequence(){
 
         // If the coil is completely down, start moving down the arm
         if ( botTop.isCoilLimitDown() && resetState == 1 ) {
-            botTop.swing(BotTop.SWING_DOWN_COMMAND);
+            botTop.swing(BotTop.SWING_DOWN_COMMAND, false);
             resetState = 2;
             return;
         }
 
         // If the arm limit switch is met, then we are done
         if ( botTop.isSwingLimitDown() && resetState == 2 ) {
+            botTop.stopSlide();
             resetState = 0;
         }
     }
 
     private void startResetSequence() {
 
+        botTop.slideUp();
+        botTop.clampRelease();
+        botTop.openClaw();
+
         if (botTop.isSwingLimitDown()) {
             return;
         }
         resetState = 1;
         botTop.coil(BotTop.COIL_DOWN_COMMAND);
-        botTop.slideDown();
-        botTop.clampRelease();
-        botTop.openClaw();
     }
 
 
@@ -412,11 +435,36 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
     private void startReadySequence() {
 
-        botTop.swing(BotTop.SWING_UP_COMMAND);
+        botTop.swing(BotTop.SWING_UP_COMMAND, false);
         readyState = 1;
         botTop.slideDown();
         botTop.clampRelease();
         botTop.openClaw();
+    }
+
+
+    private void maybeEndDodgeSequence(){
+
+        // If the coil is completely down, start moving down the arm
+        if ( botTop.isCoilLimitDown() && dodgeState == 1 ) {
+            botTop.swing(BotTop.SWING_DOWN_COMMAND, false);
+            dodgeState = 2;
+            return;
+        }
+
+        // If the arm limit switch is met, then we are done
+        if ( botTop.isSwingLimitDown() && resetState == 2 ) {
+            dodgeState = 0;
+        }
+    }
+
+    private void startDodgeSequence() {
+
+        if (botTop.isSwingLimitDown()) {
+            return;
+        }
+        dodgeState = 1;
+        botTop.coil(BotTop.COIL_DOWN_COMMAND);
     }
 
 
@@ -520,4 +568,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
         return ramp[i];
     }
+
+
 }

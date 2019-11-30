@@ -19,48 +19,6 @@ public class Autonomous_12731_blue_stone extends Autonomous_12731 {
         currentState = STATE_moveToStones;
     }
 
-    /**
-     * Here we scan left an right to find a stone.  One the stone is found
-     * we go to the next state
-     */
-    protected void scanForStoneState() {
-
-        stoneRelativePlacement = vuMark.find();
-        if (stoneRelativePlacement != null ) {
-            stopMoving();
-            currentState = STATE_alignWithStone;
-            dbugThis(String.format("Found the stone at Pos (in)  : {X, Y} = %.1f, %.1f",
-                    stoneRelativePlacement.x, stoneRelativePlacement.y));
-            return;
-        }
-
-        moveXInchesFromRightObject(9.0, 10000, 0.4);
-        boolean goingRight = true;
-
-        while (opModeIsActive() && stoneRelativePlacement == null) {
-
-            stoneRelativePlacement = vuMark.find();
-            if (stoneRelativePlacement != null) {
-                currentState = STATE_alignWithStone;
-                dbugThis(String.format("Found the stone at Pos (in)  : {X, Y} = %.1f, %.1f",
-                        stoneRelativePlacement.x, stoneRelativePlacement.y));
-                return;
-            }
-            if ( goingRight ) {
-                gotoHeading(0);
-                moveLeftByTime(6000, 0.2);
-            } else {
-                gotoHeading(0);
-                moveRightByTime(6000, 0.2);
-            }
-
-            goingRight = !goingRight;
-            telemetry.update();
-        }
-
-        return;
-    }
-
 
     protected void travelToBuildSiteState() {
         botBase.setBling(LED_TEAM_COLORS3);

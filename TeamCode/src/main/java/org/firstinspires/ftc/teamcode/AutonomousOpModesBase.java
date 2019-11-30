@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode;
 
 //import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
+import android.graphics.Color;
 import android.util.Log;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
@@ -37,10 +38,12 @@ import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -58,6 +61,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
+import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 
 
@@ -104,6 +108,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
     static final double  LED_TEAM_COLORS3               = 0.6045;  // Sparkle, Color 1 on Color 2
     static final double  LED_TEAM_COLORS4               = 0.6195;  // Beats per Minute, Color 1 and 2
 
+    static final double K                               = 1.17396293; // constant that maps change in voltage to change in RPM
+
 
     /**
      * NAVIGATION CONSTANTS
@@ -132,10 +138,15 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.
     // Valid choices are:  BACK or FRONT
-    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = BACK;
+    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = FRONT;
     protected static final boolean PHONE_IS_IN_PORTRAIT                         = false;
 
     protected static final int FIND_NAVIGATION_BEACON_MAX_RETRY              = 10;
+
+
+    /**
+     * SENSOR CONSTANTS
+     */
 
 
     // Number of sensors, they all have to be the same type
@@ -159,22 +170,22 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * Class Objects
-     */
+     * Class Objects      */
 
     /* Propulsion and basic hardware
      */
     public BotBase botBase              = null;
     public BotTop botTop                = null;
 
+
+
     /* VuMark detection
      */
     protected VuMarkIdentification vuMark  = null;
 
     /**
-     * Hardware classes
+     * HARDWARE classes
      */
-
 
     // IMU
     protected BNO055IMU gyro = null;
@@ -184,6 +195,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     ModernRoboticsI2cRangeSensor distanceBack = null;
     ModernRoboticsI2cRangeSensor distanceLeft = null;
     ModernRoboticsI2cRangeSensor distanceRight = null;
+
+    // Color sensors
+    ColorSensor bottomColor                 = null;
 
 
     // navigation servo
@@ -258,14 +272,51 @@ public class AutonomousOpModesBase extends LinearOpMode {
             this.DEBUG
         );
 
+
         /* ***********************************
             RANGE SENSORS
          */
-        distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
-        distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
-        distanceLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range_1");
-        distanceRight = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range_1");
+        try {
+            distanceFront = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "front_range_1");
+        }
+        catch (Exception e){
+            distanceFront = null;
+            dbugThis("Unable to initialize front_range_1");
+        }
+        try {
+            distanceBack = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "rear_range_1");
+        }
+        catch (Exception e){
+            distanceBack = null;
+            dbugThis("Unable to initialize rear_range_1");
+        }
+        try {
+            distanceLeft = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "left_range_1");
+        }
+        catch (Exception e){
+            distanceLeft = null;
+            dbugThis("Unable to initialize left_range_1");
+        }
+        try {
+            distanceRight = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, "right_range_1");
+        }
+        catch (Exception e){
+            distanceRight = null;
+            dbugThis("Unable to initialize right_range_1");
+        }
 
+
+        /** LINE DETECTORS
+         *
+         */
+        // get a reference to the color sensor.
+        try {
+            bottomColor = hardwareMap.get(ColorSensor.class, "bottom_color");
+        }
+        catch (Exception e){
+            bottomColor = null;
+            dbugThis("Unable to initialize bottom_color");
+        }
 
         /**
          *  COLLISION
@@ -500,6 +551,117 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
+     * Powers up the propulsion to move Right until it senses a color from a sensor
+     * @param color
+     * @param power
+     */
+    protected void moveRightToColor(int color, double power) {
+
+        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+            dbugThis("Getting out of here");
+            return;
+        }
+
+        powerPropulsion(TravelDirection.RIGHT, power);
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.RIGHT) &&
+            bottomColor != null && getValidColor(bottomColor) == color
+        ) {
+            autonomousIdleTasks();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+
+    /**
+     * Powers up the propulsion to move Left until it senses a color from a sensor
+     * @param color
+     * @param power
+     */
+    protected void moveLeftToColor(int color, double power) {
+
+        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+            dbugThis("Getting out of here");
+            return;
+        }
+
+        powerPropulsion(TravelDirection.LEFT, power);
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.LEFT) &&
+            bottomColor != null && getValidColor(bottomColor) == color
+        ) {
+            autonomousIdleTasks();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+
+    /**
+     * Powers up the propulsion to move Forward until it senses a color from a sensor
+     * @param color
+     * @param power
+     */
+    protected void moveForwardToColor(int color, double power) {
+
+        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+            dbugThis("Getting out of here");
+            return;
+        }
+
+        powerPropulsion(TravelDirection.FORWARD, power);
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.FORWARD) &&
+            bottomColor != null && getValidColor(bottomColor) == color
+        ) {
+            autonomousIdleTasks();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+
+    /**
+     * Powers up the propulsion to move Backward until it senses a color from a sensor
+     * @param color
+     * @param power
+     */
+    protected void moveBackwardToColor(int color, double power) {
+
+        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+            dbugThis("Getting out of here");
+            return;
+        }
+
+        powerPropulsion(TravelDirection.BACKWARD, power);
+
+        while (
+            opModeIsActive() &&
+            !isHittingSomething(TravelDirection.BACKWARD) &&
+            bottomColor != null && getValidColor(bottomColor) == color
+        ) {
+            autonomousIdleTasks();
+        }
+
+        stopMoving();
+        return;
+    }
+
+
+    /**
      * Powers up the propulsion to move Right until it is x inches from an object
      *
      * @param x
@@ -543,6 +705,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
             return;
         }
 
+        double validDistance = getValidDistance(distanceFront);
+
+        dbugThis("Moving X from front " + validDistance);
+
         powerPropulsion(TravelDirection.FORWARD, power);
         double limit = runtime.milliseconds() + ms;
 
@@ -550,8 +716,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.FORWARD) &&
             runtime.milliseconds() < limit &&
-            distanceFront != null && getValidDistance(distanceFront) > x
+            distanceFront != null && (validDistance = getValidDistance(distanceFront)) > x
         ) {
+            dbugThis("MovingForward " + validDistance);
             autonomousIdleTasks();
         }
 
@@ -944,9 +1111,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * consequently.
      */
     protected void autonomousIdleTasks() {
-
-        botTop.checkAllLimitSwitches();
         idle();
+        botTop.checkAllLimitSwitches();
     }
 
     /**
@@ -963,49 +1129,54 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         if (direction == TravelDirection.LEFT || direction == TravelDirection.RIGHT ) {
             if (power <= 0.2) {
-                return (int) Math.round(displacementInInches * 166.67);
+                return (int) adjustForVoltageDrop(displacementInInches * 166.67);
             }
             if (power <= 0.3) {
-                return (int) Math.round(displacementInInches * 93.80);
+                return (int) adjustForVoltageDrop(displacementInInches * 93.80);
             }
             if (power <= 0.4) {
-                return (int) Math.round(displacementInInches * 71.42);
+                return (int) adjustForVoltageDrop(displacementInInches * 71.42);
             }
             if (power <= 0.5) {
-                return (int) Math.round(displacementInInches * 60.00);
+                return (int) adjustForVoltageDrop(displacementInInches * 60.00);
             }
             if (power <= 0.6) {
-                return (int) Math.round(displacementInInches * 45.45);
+                return (int) adjustForVoltageDrop(displacementInInches * 45.45);
             }
             if (power <= 0.7) {
-                return (int) Math.round(displacementInInches * 37.5);
+                return (int) adjustForVoltageDrop(displacementInInches * 37.5);
             }
 
-            return (int) Math.round(displacementInInches * 20.00);
+            return (int) adjustForVoltageDrop(displacementInInches * 20.00);
         }
         if (direction == TravelDirection.FORWARD || direction == TravelDirection.BACKWARD ) {
             if (power <= 0.2) {
-                return (int) Math.round(displacementInInches * 125.0);
+                return (int) adjustForVoltageDrop(displacementInInches * 125.0);
             }
             if (power <= 0.3) {
-                return (int) Math.round(displacementInInches * 89.29);
+                return (int) adjustForVoltageDrop(displacementInInches * 89.29);
             }
             if (power <= 0.4) {
-                return (int) Math.round(displacementInInches * 58.82);
+                return (int) adjustForVoltageDrop(displacementInInches * 58.82);
             }
             if (power <= 0.5) {
-                return (int) Math.round(displacementInInches * 53.57);
+                return (int) adjustForVoltageDrop(displacementInInches * 53.57);
             }
             if (power <= 0.6) {
-                return (int) Math.round(displacementInInches * 40.92);
+                return (int) adjustForVoltageDrop(displacementInInches * 40.92);
             }
             if (power <= 0.7) {
-                return (int) Math.round(displacementInInches * 33.33);
+                return (int)adjustForVoltageDrop(displacementInInches * 33.33);
             }
-            return (int) Math.round(displacementInInches * 28.57);
+            return (int) adjustForVoltageDrop(displacementInInches * 28.57);
         }
 
         return 0;
+    }
+
+
+    private double adjustForVoltageDrop(double ms) {
+        return ms / (1 - K + (K*getBatteryVoltage()/13.0));
     }
 
 
@@ -1058,15 +1229,53 @@ public class AutonomousOpModesBase extends LinearOpMode {
             return 0;
         }
 
-        double limit = runtime.milliseconds() + 500;
+        double limit = runtime.milliseconds() + 1000;
         double validDistance = sensor.getDistance(DistanceUnit.INCH);
         while ( opModeIsActive() &&
                 runtime.milliseconds() < limit &&
-                (validDistance = sensor.getDistance(DistanceUnit.INCH)) == DistanceSensor.distanceOutOfRange )  {
+                ((validDistance = sensor.getDistance(DistanceUnit.INCH))) == DistanceSensor.distanceOutOfRange )  {
             autonomousIdleTasks();
         }
 
+        dbugThis("From get Valid distance" + validDistance);
+
         return validDistance;
+    }
+
+
+    public int getValidColor(ColorSensor sensor) {
+
+
+        if (sensor == null ) {
+            return Color.BLACK;
+        }
+
+        int red = sensor.red();
+        int green = sensor.green();
+        int blue = sensor.blue();
+
+        float hsvValues[] = {0F, 0F, 0F};
+        // convert the RGB values to HSV values.
+        // multiply by the SCALE_FACTOR.
+        // then cast it back to int (SCALE_FACTOR is a double)
+        Color.RGBToHSV((int) (sensor.red() * 255),
+                (int) (sensor.green() * 255),
+                (int) (sensor.blue() * 255),
+                hsvValues);
+
+        if (red < 50 && green < 50 && blue < 50 && hsvValues[2] < 50) {
+            return Color.BLACK;
+        }
+
+        if ( red > green &&  red > blue  && hsvValues[2] > 50) {
+            return Color.RED;
+        }
+
+        if ( blue > green &&  blue > red && hsvValues[2] > 50) {
+            return Color.BLUE;
+        }
+
+        return Color.BLACK;
     }
 
 
@@ -1084,6 +1293,20 @@ public class AutonomousOpModesBase extends LinearOpMode {
             autonomousIdleTasks();
         }
         botTop.getSlide().setPower(0.0);
+    }
+
+
+
+    // Computes the current battery voltage
+    double getBatteryVoltage() {
+        double result = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                result = Math.min(result, voltage);
+            }
+        }
+        return result;
     }
 
 }

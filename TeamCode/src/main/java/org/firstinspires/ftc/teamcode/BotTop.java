@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
+
 public class BotTop {
 
     static final boolean DEBUG                                  = true;
@@ -22,14 +23,16 @@ public class BotTop {
     static final double PROPULSION_ENCODER_COUNTS_PER_INCH  = (TORQUENADO_COUNTS_PER_MOTOR_REV * PROPULSION_DRIVE_GEAR_REDUCTION) / WHEEL_CIRCUMFERENCE;
 
 
-    static final double SPEED_COIL                          = 0.5;
+    static final double SPEED_COIL                          = 0.7;
     static final int    COIL_UP_DIRECTION                   = 1;
     static final int    COIL_DOWN_DIRECTION                 = -1;
     static final double COIL_UP_COMMAND                     = 0.99;
     static final double COIL_DOWN_COMMAND                   = -0.99;
     static final int    COIL_IDLE_DIRECTION                  = 0;
 
-    static final double SPEED_SWING                         = 0.2;
+    static final double SPEED_SWING                         = 0.5;
+    static final double SPEED_SWING_SLOW                    = 0.25;
+
     static final int    SWING_UP_DIRECTION                  = -1;
     static final int    SWING_DOWN_DIRECTION                = 1;
     static final double SWING_UP_COMMAND                    = 0.99;
@@ -344,15 +347,23 @@ public class BotTop {
      * @return
      */
     public boolean isArmAtLimit() {
+
+        dbugThis("Is Arm at limit");
+        dbugThis("" + armMovementDirection);
+        dbugThis("" + isSwingLimitUp());
+
         if (armMovementDirection != SWING_DOWN_DIRECTION  && isSwingLimitUp()) {
-            armMovementDirection = SWING_IDLE_DIRECTION;
+
+            dbugThis("Arm is up, shut it down!!!");
             armLiftSwing.setPower(0.0);
+            armMovementDirection = SWING_IDLE_DIRECTION;
             return true;
         }
 
         if (armMovementDirection != SWING_UP_DIRECTION  && isSwingLimitDown()) {
-            armMovementDirection = SWING_IDLE_DIRECTION;
+            dbugThis("Arm is down, shut it down!!!");
             armLiftSwing.setPower(0.0);
+            armMovementDirection = SWING_IDLE_DIRECTION;
             return true;
         }
         return false;
@@ -368,28 +379,32 @@ public class BotTop {
      *
      * @param command
      */
-    public void swing(double command) {
+    public void swing(double command, boolean slow) {
 
         if (armLiftSwing == null) {
             return;
         }
 
         if ( ( command > 0 ) || (command == SWING_UP_COMMAND) ) {
+            dbugThis("Swinging UP");
             armMovementDirection = SWING_UP_DIRECTION;
         }
         else if ( (command < 0) || (command == SWING_DOWN_COMMAND) ){
+            dbugThis("Swinging DOWN");
             armMovementDirection = SWING_DOWN_DIRECTION;
         }
         else {
+            dbugThis("Swinging nothing");
             armMovementDirection = SWING_IDLE_DIRECTION;
             armLiftSwing.setPower(0.0);
             return;
         }
 
         if (!isArmAtLimit()) {
-            armLiftSwing.setPower(armMovementDirection * SPEED_SWING);
+            armLiftSwing.setPower(armMovementDirection * (slow ? SPEED_SWING_SLOW : SPEED_SWING));
         }
-
+        dbugThis("Checking limit switches after command");
+        checkAllLimitSwitches();
     }
 
 

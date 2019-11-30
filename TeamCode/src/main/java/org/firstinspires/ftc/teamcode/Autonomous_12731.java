@@ -16,7 +16,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
     protected static final int STATE_moveToStones               = 1;
     protected static final int STATE_scanForStone               = 2;
-    protected static final int STATE_alignWithStone             = 3;
     protected static final int STATE_pickUpStone                = 4;
     protected static final int STATE_travelToBuildSite          = 5;
     protected static final int STATE_parkUnderBridge            = 6;
@@ -40,8 +39,10 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     // Sounds
     protected BotSounds botSounds = null;
 
-    // alignment
-    protected static final double CAMERA_TO_CENTER               = 2.5;
+    // alignment camera from center toward the the left is negative (with the selfie side forward)
+    protected static final double CAMERA_TO_CENTER               = -1.8;
+
+    protected static final int MAX_CYCLES_FOR_FINDING_STONE      = 3;
 
     protected static final double BLING_MODE_CLAMP               = LED_TEAM_COLORS4;
     protected static final double DISTANCE_TO_STONEWALL          = 12.0;
@@ -80,6 +81,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
+            autonomousIdleTasks();
+
             if ( currentState == STATE_done ) {
                  break;
             }
@@ -97,10 +100,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
                 case STATE_scanForStone:
                     scanForStoneState();
-                    break;
-
-                case STATE_alignWithStone:
-                    alignWithStoneState();
                     break;
 
                 case STATE_getCloseEnoughToPickup:
@@ -138,6 +137,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
                 case STATE_moveTrayBack:
                     moveTrayBackState();
                     break;
+
             }
             telemetry.update();
         }
@@ -151,9 +151,12 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
      */
     protected void moveToStoneState() {
 
-        botTop.swing(BotTop.SWING_UP_COMMAND);
-        botTop.slideDown();
+        dbugThis("================================= NEW TRY ====================================================");
+
+        botTop.swing(BotTop.SWING_UP_COMMAND, true);
+        autonomousIdleTasks();
         botTop.openClaw();
+        autonomousIdleTasks();
         justWait(1000);
         moveXInchesFromFrontObject(DISTANCE_TO_STONEWALL, 10000, 0.2);
         currentState = STATE_scanForStone;
@@ -170,85 +173,15 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     }
 
 
-    protected void alignWithStoneState() {
 
-        if ( stoneRelativePlacement == null ) {
-            currentState = STATE_done;
-            dbugThis("Failed");
-            return;
-        }
-//
-//        else if (true) {
-//            currentState = STATE_done;
-//            dbugThis("Last known position : "  +  stoneRelativePlacement.y );
-//            return;
-//        }
-
-        // This is the distance from the camera to the actual part of the robot that must align with the center of the Vumark
-        double offset = CAMERA_TO_CENTER;
-
-
-        double delta = stoneRelativePlacement.y - offset;
-        double absDelta = Math.abs(delta);
-
-        if (absDelta < 1.0) {
-            currentState = STATE_getCloseEnoughToPickup;
-            dbugThis("Found the bugger!!");
-            return;
-        }
-
-        // First we do a gross movement just to get closer
-        if (delta < 0) {
-            moveLeft(delta, 0.1);
-        } else {
-            moveRight(delta, 0.1);
-        }
-        stopMoving();
-
-        //
-        //  Then we slow down to find the middle of the stone
-        dbugThis("Slowly looking for middle of Stone");
-        stoneRelativePlacement = vuMark.find();
-        if (stoneRelativePlacement == null) {
-            currentState = STATE_done;
-            dbugThis("Failed");
-            return;
-        }
-
-        delta = stoneRelativePlacement.y - offset;
-        absDelta = Math.abs(delta);
-        dbugThis("New Delta: " + delta);
-
-        while (absDelta > 1.0 && opModeIsActive()) {
-
-            botTop.checkAllLimitSwitches();
-
-            if (delta < 0) {
-                powerPropulsion(TravelDirection.LEFT, 0.2);
-            } else {
-                powerPropulsion(TravelDirection.RIGHT, 0.2);
-            }
-            justWait(1000);
-            stoneRelativePlacement = vuMark.find();
-            if (stoneRelativePlacement == null) {
-                currentState = STATE_done;
-                dbugThis("Failed");
-                return;
-            }
-            delta = stoneRelativePlacement.y - offset;
-            absDelta = Math.abs(delta);
-
-            dbugThis("New Delta: " + delta);
-        }
-        currentState = STATE_getCloseEnoughToPickup;
-        return;
-    }
 
 
     protected void getCloseEnoughToPickUpState() {
+        botTop.slideDown();
         dbugThis("getCloseEnoughToPickUpState");
-        moveXInchesFromFrontObject(2.0, 10000, 0.3);
+        moveXInchesFromFrontObject(3.0, 4000, 0.2);
         currentState = STATE_pickUpStone;
+//        currentState = STATE_idle;
         return;
     }
 
@@ -256,11 +189,12 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         dbugThis("pickUpStoneState");
         botTop.stopSlide();
         botTop.closeClaw();
+        justWait(500);
         // slide up
-        slideByTime(300,  botTop.POWER_SLIDE);
-        botTop.swing(BotTop.SWING_DOWN_COMMAND);
-        currentState = STATE_travelToBuildSite;
-//        currentState = STATE_idle;
+        slideByTime(500,  botTop.POWER_SLIDE);
+        botTop.swing(BotTop.SWING_DOWN_COMMAND, false);
+//        currentState = STATE_travelToBuildSite;
+        currentState = STATE_idle;
         return;
     }
 
@@ -272,7 +206,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void dropOffStoneState() {
         botTop.openClaw();
         moveForward(4.0, 0.6);
-        moveXInchesFromBackObject(12.0, 100000, 0.6);
+        moveXInchesFromBackObject(12.0, 10000, 0.6);
         currentState = STATE_parkUnderBridge;
         return;
     }
