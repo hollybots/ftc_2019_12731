@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import android.graphics.Color;
 
 @Autonomous(name="Red Alliance Stone - 12731", group="1")
 public class Autonomous_12731_red_stone extends Autonomous_12731 {
@@ -14,10 +15,8 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
     @Override
     public void initAutonomous() {
-
         super.initAutonomous();
         currentState = STATE_moveToStones;
-//        currentState = STATE_scanForStone;
     }
 
     /**
@@ -76,42 +75,45 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
                 double absDelta = Math.abs(delta);
 
                 if (absDelta <= 0.8) {
-                    dbugThis("Found the bugger!!");
+                    dbugThis("ALIGNED");
                     currentState = STATE_getCloseEnoughToPickup;
                     return;
                 }
 
                 //  Then we slow down to find the middle of the stone
                 dbugThis("Slowly looking for middle of Stone");
-                dbugThis("Delta: " + delta);
+                dbugThis(String.format("Delta: %.2f", delta));
 
+                // In the robot centric space, a negative delta means that the robot must move left, TOWARD the side wall
                 if (delta < 0 && !hittingSideWall) {
-                    dbugThis("Negative delta, going left");
+                    dbugThis("SITUATION A: Negative delta, going left");
                     powerPropulsion(TravelDirection.LEFT, 0.2);
                     goingRight = false;
 
                 }
 
-                // we are in this situation where the stone is too close to the wall
+                // we are in this situation where we should abandon this stone
                 if (delta < 0 && hittingSideWall) {
-                    dbugThis("Negative delta, but have to abandon this stone");
+                    dbugThis("SITUATION B: Negative delta, should go left but are hitting the side wall");
                     powerPropulsion(TravelDirection.RIGHT, 0.2);
                     goingRight = true;
+                    justWait(2000);
+                }
+
+                // In the robot centric space, a positive delta means that the robot must move right AWAY from the side wall
+                if (delta > 0 && !hittingSideWall){
+                    dbugThis("SITUATION C: Positive delta, going right");
+                    powerPropulsion(TravelDirection.RIGHT, 0.2);
+                    goingRight = true;
+                }
+
+                // we are in this predicament where we totally ignore delta and start scanning away
+                if (delta > 0 && endOfStoneWall){
+                    dbugThis("SITUATION D: Positive delta: Shoult go right, but passed the edge of the wall");
+                    powerPropulsion(TravelDirection.LEFT, 0.2);
+                    goingRight = false;
                     justWait(1000);
                 }
-
-                if (delta > 0 && !endOfStoneWall){
-                    dbugThis("Positive delta, going right");
-                    powerPropulsion(TravelDirection.RIGHT, 0.2);
-                    goingRight = true;
-                }
-
-                if (delta > 0 && endOfStoneWall){
-                    dbugThis("Positive delta, but hpassed the edage of the wall");
-                    powerPropulsion(TravelDirection.LEFT, 0.2);
-                    goingRight = false;
-                }
-
             }
 
             // Abandon the SkyStone, just park under bridge
@@ -121,6 +123,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
                 moveXInchesFromBackObject(24.0, 10000, 0.4);
                 double toGo = 72.0 - getValidDistance(distanceLeft) - DISTANCE_LEFT_SENSORS;
                 moveRight(toGo, 0.4);
+                //moveRightToColor(Color.RED, 0.3);
                 currentState = STATE_idle;
                 return;
             }
@@ -152,10 +155,8 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
     // From the build zone
     protected void parkUnderBridgeState() {
-        //gotoHeading(0);
-        //moveXInchesFromBackObject(12.0, 5000,0.5);
-        moveForward(18.0, 0.5);
-        moveRight(24.0, 0.5);
+        gotoHeading(0);
+        moveLeftToColor(Color.RED, 0.5);
         currentState = STATE_done;
         return;
     }

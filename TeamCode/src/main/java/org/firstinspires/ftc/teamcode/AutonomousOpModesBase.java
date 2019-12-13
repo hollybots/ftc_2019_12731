@@ -446,6 +446,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     protected void moveLeft(double distance, double power)
     {
+
         move(TravelDirection.LEFT, timeToMoveInMs(TravelDirection.LEFT, power, distance), power, false);
     }
 
@@ -468,6 +469,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     protected void moveForward(double distance, double power)
     {
+
+        dbugThis("moving forward");
         move(TravelDirection.FORWARD, timeToMoveInMs(TravelDirection.FORWARD, power, distance), power,false);
     }
 
@@ -557,7 +560,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     protected void moveRightToColor(int color, double power) {
 
-        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+        if ( getValidColor(bottomColor) == color ) {
             dbugThis("Getting out of here");
             return;
         }
@@ -567,7 +570,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.RIGHT) &&
-            bottomColor != null && getValidColor(bottomColor) == color
+            getValidColor(bottomColor) != color
         ) {
             autonomousIdleTasks();
         }
@@ -585,7 +588,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     protected void moveLeftToColor(int color, double power) {
 
-        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+        if ( getValidColor(bottomColor) == color ) {
             dbugThis("Getting out of here");
             return;
         }
@@ -595,7 +598,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.LEFT) &&
-            bottomColor != null && getValidColor(bottomColor) == color
+            getValidColor(bottomColor) != color
         ) {
             autonomousIdleTasks();
         }
@@ -613,8 +616,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     protected void moveForwardToColor(int color, double power) {
 
-        if (bottomColor != null && getValidColor(bottomColor) == color ) {
-            dbugThis("Getting out of here");
+        if ( getValidColor(bottomColor) == color ) {
+            dbugThis("Found the color");
             return;
         }
 
@@ -623,7 +626,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.FORWARD) &&
-            bottomColor != null && getValidColor(bottomColor) == color
+            getValidColor(bottomColor) != color
         ) {
             autonomousIdleTasks();
         }
@@ -641,7 +644,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     protected void moveBackwardToColor(int color, double power) {
 
-        if (bottomColor != null && getValidColor(bottomColor) == color ) {
+        if (getValidColor(bottomColor) == color ) {
             dbugThis("Getting out of here");
             return;
         }
@@ -651,7 +654,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.BACKWARD) &&
-            bottomColor != null && getValidColor(bottomColor) == color
+            getValidColor(bottomColor) != color
         ) {
             autonomousIdleTasks();
         }
@@ -670,6 +673,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public void moveXInchesFromRightObject(double x, double ms, double power) {
 
+
+        dbugThis("Moving To right object" + x);
         if (distanceRight != null && getValidDistance(distanceRight) < x ) {
             dbugThis("Getting out of here");
             return;
@@ -701,13 +706,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     public void moveXInchesFromFrontObject(double x, double ms, double power) {
 
+        dbugThis("Moving X to FRONT object " + x);
+
         if (distanceFront != null && getValidDistance(distanceFront)  < x ) {
             return;
         }
-
-        double validDistance = getValidDistance(distanceFront);
-
-        dbugThis("Moving X from front " + validDistance);
 
         powerPropulsion(TravelDirection.FORWARD, power);
         double limit = runtime.milliseconds() + ms;
@@ -716,9 +719,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
             opModeIsActive() &&
             !isHittingSomething(TravelDirection.FORWARD) &&
             runtime.milliseconds() < limit &&
-            distanceFront != null && (validDistance = getValidDistance(distanceFront)) > x
+            distanceFront != null && getValidDistance(distanceFront) > x
         ) {
-            dbugThis("MovingForward " + validDistance);
             autonomousIdleTasks();
         }
 
@@ -735,6 +737,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * @param power
      */
     public void moveXInchesFromBackObject(double x, double ms, double power) {
+
+        dbugThis("Moving X to BACK object " + x);
 
         if (distanceBack != null && getValidDistance(distanceBack) < x ) {
             return;
@@ -770,6 +774,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      */
     private void move(TravelDirection direction, double ms, double power, boolean untilRealigned) {
 
+
         if (power == 0) {
             power = DRIVE_SPEED;
         }
@@ -782,14 +787,18 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(direction) &&
-            !isCollidingWithBackObject() &&
+            (!isCollidingWithBackObject() || isCollidingWithBackObject() && direction != TravelDirection.BACKWARD) &&
             !isStalled() &&
             (now = runtime.milliseconds()) < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
-            if ( now > limitToSlowDown ) {
+            if ( now > limitToSlowDown && power > 0.4 ) {
                 powerPropulsion(direction, power / 2.0);
             }
+            else {
+                powerPropulsion(direction, power);
+            }
+
             autonomousIdleTasks();
         }
 
@@ -820,29 +829,29 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         switch (direction) {
             case FORWARD:
-                multiplierFL = 1;
-                multiplierFR = 1;
+                multiplierFL = 0.98;
+                multiplierFR = 0.98;
                 multiplierRL = 1;
                 multiplierRR = 1;
                 propulsionDirection = TravelDirection.FORWARD;
                 break;
             case BACKWARD:
-                multiplierFL = -1;
-                multiplierFR = -1;
+                multiplierFL = -0.98;
+                multiplierFR = -0.98;
                 multiplierRL = -1;
                 multiplierRR = -1;
                 propulsionDirection = TravelDirection.BACKWARD;
                 break;
             case LEFT:
-                multiplierFL = -1;
-                multiplierFR = 1;
+                multiplierFL = -0.98;
+                multiplierFR = 0.98;
                 multiplierRL = 1;
                 multiplierRR = -1;
                 propulsionDirection = TravelDirection.LEFT;
                 break;
             case RIGHT:
-                multiplierFL = 1;
-                multiplierFR = -1;
+                multiplierFL = 0.98;
+                multiplierFR = -0.98;
                 multiplierRL = -1;
                 multiplierRR = 1;
                 propulsionDirection = TravelDirection.RIGHT;
@@ -1032,6 +1041,31 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
+     * Determines the error between the target angle and the robot's current heading
+     *
+     * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
+     * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
+     *          +ve error means the robot should turn LEFT (CCW) to reduce error.
+     *
+     */
+    public double getHeadingErrorRadians(double targetAngle) {
+
+        double robotError;
+        double actualAngle;
+
+        Orientation angles   = gyro.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        actualAngle = AngleUnit.RADIANS.normalize(AngleUnit.RADIANS.fromUnit(angles.angleUnit, angles.firstAngle));
+
+        // calculate error in -179 to +180 range  (
+        robotError = targetAngle - actualAngle;
+        while (robotError > Math.PI)  robotError -= Math.PI*2;
+        while (robotError <= -Math.PI) robotError += Math.PI*2;
+
+        return robotError;
+    }
+
+
+    /**
      * Returns desired steering force.  +/- 1 range.  +ve = steer left
      *
      * @param error   Error angle in robot relative degrees
@@ -1101,6 +1135,34 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      */
     public boolean isHittingSomething(TravelDirection direction) {
+
+
+        switch (direction) {
+
+            case FORWARD:
+                if ( getValidDistance(distanceFront) < 2.0 ) {
+                    return true;
+                }
+                return false;
+
+            case BACKWARD:
+                if ( getValidDistance(distanceBack) < 2.0 ) {
+                    return true;
+                }
+                return false;
+
+            case LEFT:
+                if ( getValidDistance(distanceLeft) < 2.0 ) {
+                    return true;
+                }
+                return false;
+
+            case RIGHT:
+                if ( getValidDistance(distanceRight) < 2.0 ) {
+                    return true;
+                }
+                return false;
+        }
 
         return false;
     }
@@ -1226,7 +1288,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
     public double getValidDistance(ModernRoboticsI2cRangeSensor sensor) {
 
         if (sensor == null) {
-            return 0;
+            return 255;
         }
 
         double limit = runtime.milliseconds() + 1000;
@@ -1239,7 +1301,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         dbugThis("From get Valid distance" + validDistance);
 
-        return validDistance;
+        return validDistance == DistanceSensor.distanceOutOfRange ? 255 : validDistance;
     }
 
 
@@ -1247,6 +1309,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
         if (sensor == null ) {
+            dbugThis("Valid color is null");
             return Color.BLACK;
         }
 
@@ -1263,18 +1326,16 @@ public class AutonomousOpModesBase extends LinearOpMode {
                 (int) (sensor.blue() * 255),
                 hsvValues);
 
-        if (red < 50 && green < 50 && blue < 50 && hsvValues[2] < 50) {
-            return Color.BLACK;
-        }
-
-        if ( red > green &&  red > blue  && hsvValues[2] > 50) {
+        if ( red > 80 && red > green &&  red > blue  ) {
+            dbugThis("Valid color is red");
             return Color.RED;
         }
 
-        if ( blue > green &&  blue > red && hsvValues[2] > 50) {
+        if ( blue > 80 && blue > green &&  blue > red ) {
+            dbugThis("Valid color is blue");
             return Color.BLUE;
         }
-
+        dbugThis("Valid color is default");
         return Color.BLACK;
     }
 

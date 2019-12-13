@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
+import android.graphics.Color;
 
 @Autonomous(name="Base Team 12731", group="none")
 @Disabled
@@ -71,8 +72,9 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         /*********************************************
          * WAIT FOR START
          * *******************************************/
-        runtime.reset();
+
         waitForStart();
+        runtime.reset();
 
         /*********************************************
          * GAME IS ON !!
@@ -152,7 +154,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void moveToStoneState() {
 
         dbugThis("================================= NEW TRY ====================================================");
-
         botTop.swing(BotTop.SWING_UP_COMMAND, true);
         autonomousIdleTasks();
         botTop.openClaw();
@@ -174,8 +175,6 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
 
 
-
-
     protected void getCloseEnoughToPickUpState() {
         botTop.slideDown();
         dbugThis("getCloseEnoughToPickUpState");
@@ -193,8 +192,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
         // slide up
         slideByTime(500,  botTop.POWER_SLIDE);
         botTop.swing(BotTop.SWING_DOWN_COMMAND, false);
-//        currentState = STATE_travelToBuildSite;
-        currentState = STATE_idle;
+        currentState = STATE_travelToBuildSite;
         return;
     }
 
@@ -206,7 +204,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void dropOffStoneState() {
         botTop.openClaw();
         moveForward(4.0, 0.6);
-        moveXInchesFromBackObject(12.0, 10000, 0.6);
+        moveXInchesFromBackObject(12.0, 10000, 0.5);
         currentState = STATE_parkUnderBridge;
         return;
     }

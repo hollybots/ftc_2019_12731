@@ -45,9 +45,9 @@ public class BotTop {
     static final double POS_CLOSE_CLAW_LEFT                     = 0.4;
 
     static final double POS_PIN_UP_RIGHT                    = 0.75;
-    static final double POS_PIN_DOWN_RIGHT                  = 0.3;
-    static final double POS_PIN_UP_LEFT                     = 0.35;
-    static final double POS_PIN_DOWN_LEFT                   = 0.8;
+    static final double POS_PIN_DOWN_RIGHT                  = 0.23;
+    static final double POS_PIN_UP_LEFT                     = 0.3;
+    static final double POS_PIN_DOWN_LEFT                   = 0.82;
 
     static final double POWER_SLIDE                         = 0.5;
 

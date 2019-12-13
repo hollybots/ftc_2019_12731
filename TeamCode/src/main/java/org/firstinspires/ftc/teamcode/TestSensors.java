@@ -187,6 +187,12 @@ public class TestSensors extends TeleOpModesBase
             frontColor = null;
             dbugThis("Unable to map front_color");
         }
+        try{
+            bottomColor = hardwareMap.get(ColorSensor.class, "bottom_color");
+        } catch (Exception e) {
+            frontColor = null;
+            dbugThis("Unable to map bottom_color");
+        }
 
                 /* ************************************
             VUMARK
@@ -383,6 +389,8 @@ public class TestSensors extends TeleOpModesBase
             telemetry.addData("Green", bottomColor.green());
             telemetry.addData("Blue ", bottomColor.blue());
             telemetry.addData("Hue", hsvValues[0]);
+
+            // R 168, 59 59
         }
 
         // Show color sensor info

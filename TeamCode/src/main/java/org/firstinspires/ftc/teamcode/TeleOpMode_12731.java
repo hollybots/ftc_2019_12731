@@ -470,7 +470,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
 
     private WheelPower calcWheelPower(double K, double clockwise, double forward, double right) {
 
-        WheelPower wheels                    = new WheelPower();
+        WheelPower wheels                       = new WheelPower();
 
         // Now add a tuning constant K for the rotate axis sensitivity.
         // Start with K=0, and increase it very slowly (do not exceed K=1)
