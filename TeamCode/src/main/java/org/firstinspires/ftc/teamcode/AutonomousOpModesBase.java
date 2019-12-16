@@ -787,11 +787,14 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             !isHittingSomething(direction) &&
-            (!isCollidingWithBackObject() || isCollidingWithBackObject() && direction != TravelDirection.BACKWARD) &&
             !isStalled() &&
             (now = runtime.milliseconds()) < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
+            if (isCollidingBack() && (direction == TravelDirection.BACKWARD) ) {
+                powerPropulsion(direction, 0.1);
+                limit = now + 200;
+            }
             if ( now > limitToSlowDown && power > 0.4 ) {
                 powerPropulsion(direction, power / 2.0);
             }
@@ -801,7 +804,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
             autonomousIdleTasks();
         }
-
         stopMoving();
         return;
     }
@@ -829,31 +831,31 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         switch (direction) {
             case FORWARD:
-                multiplierFL = 0.98;
-                multiplierFR = 0.98;
-                multiplierRL = 1;
-                multiplierRR = 1;
+                multiplierFL = 1;
+                multiplierFR = 1;
+                multiplierRL = 0.97;
+                multiplierRR = 0.97;
                 propulsionDirection = TravelDirection.FORWARD;
                 break;
             case BACKWARD:
-                multiplierFL = -0.98;
-                multiplierFR = -0.98;
-                multiplierRL = -1;
-                multiplierRR = -1;
+                multiplierFL = -1;
+                multiplierFR = -1;
+                multiplierRL = -0.97;
+                multiplierRR = -0.97;
                 propulsionDirection = TravelDirection.BACKWARD;
                 break;
             case LEFT:
-                multiplierFL = -0.98;
-                multiplierFR = 0.98;
-                multiplierRL = 1;
-                multiplierRR = -1;
+                multiplierFL = -1;
+                multiplierFR = 1;
+                multiplierRL = 0.97;
+                multiplierRR = -0.97;
                 propulsionDirection = TravelDirection.LEFT;
                 break;
             case RIGHT:
-                multiplierFL = 0.98;
-                multiplierFR = -0.98;
-                multiplierRL = -1;
-                multiplierRR = 1;
+                multiplierFL = 1;
+                multiplierFR = -1;
+                multiplierRL = -0.97;
+                multiplierRR = 0.97;
                 propulsionDirection = TravelDirection.RIGHT;
                 break;
             default:

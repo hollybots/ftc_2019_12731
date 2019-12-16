@@ -106,11 +106,11 @@ public class Autonomous_test extends AutonomousOpModesBase {
         while (opModeIsActive()) {
             justWait(1000);
             if (right) {
-                moveRight(40.0, 0.2);
+                moveRight(40.0, 0.4);
                 right = false;
             }
             else {
-                moveLeft(40.0, 0.2);
+                moveLeft(40.0, 0.4);
                 right = true;
             }
         }

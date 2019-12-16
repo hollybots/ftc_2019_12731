@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 
+import android.graphics.Color;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -19,9 +21,10 @@ public class Autonomous_12731_blue_tray extends Autonomous_12731 {
 
     protected void moveToTrayState() {
 
-        moveBackward(4, 0.5);
+        moveBackward(4, 0.4);
         moveXInchesFromRightObject(17.0, 6000, 0.5);
         moveBackwardByTime(10000, 0.3);
+        moveBackwardByTime(10000, 0.1);
         justWait(500);
         currentState = STATE_clampTray;
 
@@ -30,7 +33,7 @@ public class Autonomous_12731_blue_tray extends Autonomous_12731 {
 
     protected void moveTrayBackState() {
 
-        moveXInchesFromFrontObject(3.0, 10000, 0.3);
+        moveXInchesFromFrontObject(4.0, 10000, 0.3);
         turn(90.0);
         botTop.clampRelease();
         justWait(500);
@@ -41,10 +44,11 @@ public class Autonomous_12731_blue_tray extends Autonomous_12731 {
     protected void parkUnderBridgeState() {
 
         botTop.clampRelease();
-        justWait(3000);
+        justWait(500);
         gotoHeading(90);
-        moveForwardToColor(Color.BLUE, 0.3);
+        moveForward(3.0, 0.3);
         moveXInchesFromRightObject(3.0, 10000, 0.3);
+        moveForwardToColor(Color.BLUE, 0.3);
         currentState = STATE_done;
     }
 

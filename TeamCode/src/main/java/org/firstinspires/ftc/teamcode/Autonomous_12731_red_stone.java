@@ -51,14 +51,14 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
                 dbugThis("Hitting wall  : " + hittingSideWall);
 
                 if (endOfStoneWall && goingRight ) {
-                    powerPropulsion(TravelDirection.LEFT, 0.2);
+                    powerPropulsion(TravelDirection.LEFT, 0.3);
                     goingRight = false;
                     gotoHeading(0);
                     retries++;
                 }
 
                 if (hittingSideWall && !goingRight) {
-                    powerPropulsion(TravelDirection.RIGHT, 0.2);
+                    powerPropulsion(TravelDirection.RIGHT, 0.3);
                     goingRight = true;
                     gotoHeading(0);
                     retries++;
@@ -95,7 +95,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
                 // we are in this situation where we should abandon this stone
                 if (delta < 0 && hittingSideWall) {
                     dbugThis("SITUATION B: Negative delta, should go left but are hitting the side wall");
-                    powerPropulsion(TravelDirection.RIGHT, 0.2);
+                    powerPropulsion(TravelDirection.RIGHT, 0.3);
                     goingRight = true;
                     justWait(2000);
                 }
@@ -110,7 +110,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
                 // we are in this predicament where we totally ignore delta and start scanning away
                 if (delta > 0 && endOfStoneWall){
                     dbugThis("SITUATION D: Positive delta: Shoult go right, but passed the edge of the wall");
-                    powerPropulsion(TravelDirection.LEFT, 0.2);
+                    powerPropulsion(TravelDirection.LEFT, 0.3);
                     goingRight = false;
                     justWait(1000);
                 }
@@ -156,7 +156,7 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
     // From the build zone
     protected void parkUnderBridgeState() {
         gotoHeading(0);
-        moveLeftToColor(Color.RED, 0.5);
+        moveLeftToColor(Color.RED, 0.4);
         currentState = STATE_done;
         return;
     }

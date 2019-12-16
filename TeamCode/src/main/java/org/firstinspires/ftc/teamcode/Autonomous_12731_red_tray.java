@@ -6,6 +6,7 @@ import android.graphics.Color;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import android.graphics.Color;
 
 @Autonomous(name="Red Alliance Tray - 12731", group="1")
 public class Autonomous_12731_red_tray extends Autonomous_12731 {
@@ -31,7 +32,7 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
 
     protected void moveTrayBackState() {
 
-        moveXInchesFromFrontObject(3.0, 10000, 0.3);
+        moveXInchesFromFrontObject(4.0, 10000, 0.3);
         turn(-90.0);
         botTop.clampRelease();
         justWait(500);
@@ -39,14 +40,16 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
     }
 
 
+
+
     protected void parkUnderBridgeState() {
 
         botTop.clampRelease();
-        justWait(3000);
+        justWait(500);
         gotoHeading(-90);
-//        moveForwardToColor(Color.RED, 0.3);
-        moveForward(37.0, 0.3);
+        moveForward(3.0, 0.3);
         moveXInchesFromLeftObject(3.0, 10000, 0.3);
+        moveForwardToColor(Color.RED, 0.3);
         currentState = STATE_done;
     }
 
