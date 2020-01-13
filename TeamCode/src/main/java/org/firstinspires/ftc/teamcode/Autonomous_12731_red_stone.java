@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
+import android.graphics.Color;
 
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -27,20 +28,20 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
      */
     protected void scanForStoneState() {
 
-        moveXInchesFromLeftObject(4.50, 10000, 0.5);
-        boolean goingRight          = true;
+//        moveXInchesFromLeftObject(4.50, 10000, 0.5);
+        boolean goingRight          = false;
         boolean endOfStoneWall      = false;
         boolean hittingSideWall     = false;
         int retries                 = 0;
 
-        powerPropulsion(TravelDirection.RIGHT, 0.2);
+        powerPropulsion(TravelDirection.LEFT, 0.2);
 
         while (opModeIsActive() && retries < MAX_CYCLES_FOR_FINDING_STONE ) {
 
             stoneRelativePlacement = vuMark.find();
             botTop.checkAllLimitSwitches();
             endOfStoneWall = getValidDistance(distanceFront) > (DISTANCE_TO_STONEWALL + 4.0);
-            hittingSideWall = getValidDistance(distanceLeft) < 4.0;
+            hittingSideWall = getValidDistance(distanceLeft) < 8.0;
 
 
             if (stoneRelativePlacement == null) {
@@ -121,9 +122,9 @@ public class Autonomous_12731_red_stone extends Autonomous_12731 {
 
                 dbugThis("Missed the whole thing, going to bridge");
                 moveXInchesFromBackObject(24.0, 10000, 0.4);
-                double toGo = 72.0 - getValidDistance(distanceLeft) - DISTANCE_LEFT_SENSORS;
-                moveRight(toGo, 0.4);
-                //moveRightToColor(Color.RED, 0.3);
+//                double toGo = 72.0 - getValidDistance(distanceLeft) - DISTANCE_LEFT_SENSORS;
+//                moveRight(toGo, 0.4);
+                moveRightToColor(Color.RED, 0.3);
                 currentState = STATE_idle;
                 return;
             }
