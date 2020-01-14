@@ -40,12 +40,8 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
     }
 
 
-
-
     protected void parkUnderBridgeState() {
 
-        botTop.clampRelease();
-        justWait(500);
         gotoHeading(-90);
         moveForward(3.0, 0.3);
         moveXInchesFromLeftObject(3.0, 10000, 0.3);

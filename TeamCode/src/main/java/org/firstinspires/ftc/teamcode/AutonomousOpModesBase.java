@@ -786,8 +786,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         while (
             opModeIsActive() &&
-            !isHittingSomething(direction) &&
-            !isStalled() &&
             (now = runtime.milliseconds()) < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
@@ -795,12 +793,12 @@ public class AutonomousOpModesBase extends LinearOpMode {
                 powerPropulsion(direction, 0.1);
                 limit = now + 200;
             }
-            if ( now > limitToSlowDown && power > 0.4 ) {
-                powerPropulsion(direction, power / 2.0);
-            }
-            else {
-                powerPropulsion(direction, power);
-            }
+//            if ( now > limitToSlowDown && power > 0.4 ) {
+//                powerPropulsion(direction, power / 2.0);
+//            }
+//            else {
+//                powerPropulsion(direction, power);
+//            }
 
             autonomousIdleTasks();
         }
@@ -1137,34 +1135,34 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *
      */
     public boolean isHittingSomething(TravelDirection direction) {
-
-
-        switch (direction) {
-
-            case FORWARD:
-                if ( getValidDistance(distanceFront) < 2.0 ) {
-                    return true;
-                }
-                return false;
-
-            case BACKWARD:
-                if ( getValidDistance(distanceBack) < 2.0 ) {
-                    return true;
-                }
-                return false;
-
-            case LEFT:
-                if ( getValidDistance(distanceLeft) < 2.0 ) {
-                    return true;
-                }
-                return false;
-
-            case RIGHT:
-                if ( getValidDistance(distanceRight) < 2.0 ) {
-                    return true;
-                }
-                return false;
-        }
+//
+//
+//        switch (direction) {
+//
+//            case FORWARD:
+//                if ( getValidDistance(distanceFront) < 2.0 ) {
+//                    return true;
+//                }
+//                return false;
+//
+//            case BACKWARD:
+//                if ( getValidDistance(distanceBack) < 2.0 ) {
+//                    return true;
+//                }
+//                return false;
+//
+//            case LEFT:
+//                if ( getValidDistance(distanceLeft) < 2.0 ) {
+//                    return true;
+//                }
+//                return false;
+//
+//            case RIGHT:
+//                if ( getValidDistance(distanceRight) < 2.0 ) {
+//                    return true;
+//                }
+//                return false;
+//        }
 
         return false;
     }
