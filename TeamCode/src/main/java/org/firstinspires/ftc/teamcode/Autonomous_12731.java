@@ -41,7 +41,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected BotSounds botSounds = null;
 
     // alignment camera from center toward the the left is negative (with the selfie side forward)
-    protected static final double CAMERA_TO_CENTER               = -1.8;
+    protected static final double CAMERA_TO_CENTER               = -3;
 
     protected static final int MAX_CYCLES_FOR_FINDING_STONE      = 3;
 
@@ -154,12 +154,13 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void moveToStoneState() {
 
         dbugThis("================================= NEW TRY ====================================================");
-        botTop.swing(BotTop.SWING_UP_COMMAND, true);
+        botTop.swing(BotTop.SWING_UP_COMMAND, false);
+        autonomousIdleTasks();
+        moveXInchesFromFrontObject(DISTANCE_TO_STONEWALL, 10000, 0.2);
         autonomousIdleTasks();
         botTop.openClaw();
-        autonomousIdleTasks();
-        justWait(1000);
-        moveXInchesFromFrontObject(DISTANCE_TO_STONEWALL, 10000, 0.2);
+//        autonomousIdleTasks();
+//        justWait(1000);
         currentState = STATE_scanForStone;
         return;
     }
@@ -178,7 +179,8 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
     protected void getCloseEnoughToPickUpState() {
         botTop.slideDown();
         dbugThis("getCloseEnoughToPickUpState");
-        moveXInchesFromFrontObject(3.0, 4000, 0.2);
+//        moveXInchesFromFrontObject(0, 4000, 0.2);
+        moveForwardByTime(2000, 0.2);
         currentState = STATE_pickUpStone;
 //        currentState = STATE_idle;
         return;
@@ -202,11 +204,7 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
 
 
     protected void dropOffStoneState() {
-        botTop.openClaw();
-        moveForward(4.0, 0.6);
-        moveXInchesFromBackObject(12.0, 10000, 0.5);
-        currentState = STATE_parkUnderBridge;
-        return;
+
     }
 
     protected void travelHomeState() {

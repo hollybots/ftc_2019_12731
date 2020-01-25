@@ -446,6 +446,7 @@ public class BotTop {
 
 
 
+
     /**
      * Check the state of the limit switch and the direction of the movement
      * as kept in the state variable coilMovementDirection.  It returns true if
@@ -470,7 +471,6 @@ public class BotTop {
 
         return false;
     }
-
 
 
     /**
@@ -516,8 +516,11 @@ public class BotTop {
      *
      * @return
      */
+
     public boolean checkAllLimitSwitches() {
-        return isCoilAtLimit() || isArmAtLimit();
+        boolean coilLimit = isCoilAtLimit();
+        boolean armLimit = isArmAtLimit();
+        return coilLimit || armLimit;
     }
 
 

@@ -5,11 +5,8 @@ import android.graphics.Color;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import android.graphics.Color;
-
-@Autonomous(name="Blue Alliance Tray - 12731", group="1")
-public class Autonomous_12731_blue_tray extends Autonomous_12731 {
+@Autonomous(name="Blue Alliance Tray Bridge - 12731", group="1")
+public class Autonomous_12731_blue_tray_bridge extends Autonomous_12731 {
 
     @Override
     public void initAutonomous() {
@@ -43,7 +40,7 @@ public class Autonomous_12731_blue_tray extends Autonomous_12731 {
 
         gotoHeading(90);
         moveForward(3.0, 0.3);
-        moveXInchesFromRightObject(3.0, 10000, 0.3);
+        moveLeft(18.0,  0.3);
         moveForwardToColor(Color.BLUE, 0.3);
         currentState = STATE_done;
     }

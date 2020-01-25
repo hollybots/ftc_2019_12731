@@ -171,6 +171,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     public void start() {
 
         runtime.reset();
+        botBase.setBling(LED_TEAM_COLORS4);
     }
 
 

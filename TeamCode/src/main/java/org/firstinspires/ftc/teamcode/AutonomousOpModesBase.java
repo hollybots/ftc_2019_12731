@@ -778,6 +778,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         if (power == 0) {
             power = DRIVE_SPEED;
         }
+        boolean bumped = false;
         powerPropulsion(direction, power);
 
         double limit = runtime.milliseconds() + ms;
@@ -789,9 +790,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
             (now = runtime.milliseconds()) < limit &&
             (!untilRealigned || untilRealigned && botCurrentPlacement != null)
         ) {
-            if (isCollidingBack() && (direction == TravelDirection.BACKWARD) ) {
+            if (isCollidingBack() && (direction == TravelDirection.BACKWARD) && !bumped ) {
+                bumped = true;
                 powerPropulsion(direction, 0.1);
-                limit = now + 200;
+                limit = now + 2000;
             }
 //            if ( now > limitToSlowDown && power > 0.4 ) {
 //                powerPropulsion(direction, power / 2.0);

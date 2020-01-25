@@ -23,7 +23,6 @@ public class Autonomous_12731_red_tray extends Autonomous_12731 {
         moveBackward(4, 0.4);
         moveXInchesFromLeftObject(17.0, 6000, 0.5);
         moveBackwardByTime(10000, 0.3);
-        moveBackwardByTime(10000, 0.1);
         justWait(500);
         currentState = STATE_clampTray;
 

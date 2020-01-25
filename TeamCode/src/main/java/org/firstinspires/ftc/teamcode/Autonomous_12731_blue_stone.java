@@ -138,8 +138,16 @@ public class Autonomous_12731_blue_stone extends Autonomous_12731 {
         gotoHeading(0);
         justWait(500);
         double toGo = 100.0 - getValidDistance(distanceRight) - DISTANCE_RIGHT_SENSORS;
-        moveLeft(toGo, 0.4);
+        moveLeft(toGo, 0.6);
         currentState = STATE_dropOffStone;
+        return;
+    }
+
+    protected void dropOffStoneState() {
+        botTop.openClaw();
+        moveForward(4.0, 0.6);
+        moveXInchesFromBackObject(4.0, 10000, 0.5);
+        currentState = STATE_parkUnderBridge;
         return;
     }
 
