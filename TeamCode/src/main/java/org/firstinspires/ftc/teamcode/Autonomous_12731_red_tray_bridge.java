@@ -2,39 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 
 import android.graphics.Color;
-
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 @Autonomous(name="Red Alliance Tray Bridge - 12731", group="1")
-public class Autonomous_12731_red_tray_bridge extends Autonomous_12731 {
-
-    @Override
-    public void initAutonomous() {
-
-        super.initAutonomous();
-        currentState = STATE_moveToTray;
-    }
-
-    protected void moveToTrayState() {
-
-        moveBackward(4, 0.4);
-        moveXInchesFromLeftObject(17.0, 6000, 0.5);
-        moveBackwardByTime(10000, 0.3);
-        justWait(500);
-        currentState = STATE_clampTray;
-
-    }
-
-
-    protected void moveTrayBackState() {
-
-        moveXInchesFromFrontObject(4.0, 10000, 0.3);
-        turn(-90.0);
-        botTop.clampRelease();
-        justWait(500);
-        currentState = STATE_parkUnderBridge;
-    }
-
+public class Autonomous_12731_red_tray_bridge extends Autonomous_12731_red_tray {
 
     protected void parkUnderBridgeState() {
 
@@ -44,5 +15,4 @@ public class Autonomous_12731_red_tray_bridge extends Autonomous_12731 {
         moveForwardToColor(Color.RED, 0.3);
         currentState = STATE_done;
     }
-
 }
