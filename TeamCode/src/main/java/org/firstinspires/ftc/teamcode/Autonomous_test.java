@@ -94,27 +94,6 @@ public class Autonomous_test extends AutonomousOpModesBase {
      * We need to move close enough to be able to see the stone
      */
     protected void moveFrontAndLaterally() {
-
-        dbugThis("================================= NEW TRY ====================================================");
-        botTop.swing(BotTop.SWING_UP_COMMAND, true);
-        autonomousIdleTasks();
-        botTop.openClaw();
-        autonomousIdleTasks();
-        justWait(1000);
-        moveXInchesFromFrontObject(DISTANCE_TO_STONEWALL, 10000, 0.2);
-        boolean right = true;
-        while (opModeIsActive()) {
-            justWait(1000);
-            if (right) {
-                moveRight(40.0, 0.4);
-                right = false;
-            }
-            else {
-                moveLeft(40.0, 0.4);
-                right = true;
-            }
-        }
-        return;
     }
 
 }

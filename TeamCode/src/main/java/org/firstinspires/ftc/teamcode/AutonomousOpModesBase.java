@@ -1342,23 +1342,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
     }
 
 
-    /**
-     * Powers up the rack and pinion CR servo a cerin mount of time
-     * @param ms
-     * @param power
-     */
-    protected void slideByTime(int ms, double power) {
-
-        double limit = runtime.milliseconds() + ms;
-
-        botTop.getSlide().setPower(power);
-        while (opModeIsActive() &&  runtime.milliseconds() < limit) {
-            autonomousIdleTasks();
-        }
-        botTop.getSlide().setPower(0.0);
-    }
-
-
 
     // Computes the current battery voltage
     double getBatteryVoltage() {
