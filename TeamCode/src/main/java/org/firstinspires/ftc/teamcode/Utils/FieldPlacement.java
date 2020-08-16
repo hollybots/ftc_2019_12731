@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Utils;
 
 public class FieldPlacement {
 
@@ -6,21 +6,21 @@ public class FieldPlacement {
         Position along the X axis running from left to right, when facing the Blue alliance.
         Having 0 as the field center
      */
-    protected double x;     //inches
+    public double x;     //inches
 
     /*
         Position along the Y axis running from Red alliance to the Blue alliances
         Having 0 as the field center
     */
-    protected double y;     //inches
+    public double y;     //inches
 
-    protected double theta;
-    protected double r;
+    public double theta;
+    public double r;
 
     /*
         Heading of the robot.  0 is the heading when the robot is parallel to the Y axis
      */
-    protected double orientation;   // degrees
+    public double orientation;   // degrees
 
 
     public FieldPlacement(FieldPlacement another) {

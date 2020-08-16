@@ -70,7 +70,7 @@ public class TeleOpModesBase extends OpMode {
         botBase.stop();
     }
 
-    void dbugThis(String s) {
+    protected void dbugThis(String s) {
 
         if ( DEBUG == true ) {
             Log.d("TELEOP: ", s);

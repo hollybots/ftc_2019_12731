@@ -26,7 +26,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Utils;
 
 
 import android.util.Log;
@@ -38,37 +38,27 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-import org.firstinspires.ftc.robotcore.external.navigation.VuMarkInstanceId;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 /**
- * This OpMode illustrates the basics of using the Vuforia engine to determine
- * the identity of Vuforia VuMarks encountered on the field. The code is structured as
- * a LinearOpMode. It shares much structure with {@link ConceptVuforiaNavigation}; we do not here
- * duplicate the core Vuforia documentation found there, but rather instead focus on the
- * differences between the use of Vuforia for navigation vs VuMark identification.
+ * This class abstracts the Vuforia engine.
+ * It is used to identity a Vuforia VuMark encountered on field.
  *
  * @see ConceptVuforiaNavigation
  * @see VuforiaLocalizer
  * @see VuforiaTrackableDefaultListener
  * see  ftc_app/doc/tutorial/FTC_FieldCoordinateSystemDefinition.pdf
  *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list.
- *
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained in {@link ConceptVuforiaNavigation}.
  */
 public class VuMarkIdentification {
 
+    // VuForia Key, register online
+    protected static final String VUFORIA_KEY = "AXINfYT/////AAAAGfcLttUpcU8GheQqMMZAtnFDz/qRJOlHnxEna51521+PFcmEWc02gUQ1s4DchmXk+fFvt+afRNF+2UoUgoAyQNtfVjRNS0u4f5o4kka/jERVEtKlJ27pO4euCEjE1DQ+l8ecADKTd1aWu641OheSf/RqDJ7BSvDct/PYRfRLfShAfBUxaFT3+Ud+6EL31VTmZKiylukvCnHaaQZxDmB2cCDdYFeK2CDwNIWoMx2VvweehNARttNvSR3cp4AepbtWnadsEnDQaStDv8jN09iE7CRWmMY8rrP8ba/O/eVlz0vzU7Fhtf2jXpSvCJn0qDw+1UK/bHsD/vslhdp+CBNcW7bT3gNHgTOrnIcldX2YhgZS";
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
@@ -82,28 +72,25 @@ public class VuMarkIdentification {
      */
     private VuforiaLocalizer vuforia;
     private Telemetry telemetry;
-    private boolean DEBUG   = false;
+    private boolean DEBUG                           = false;
 
     // active state
-    private boolean active   = false;
-    private BotBase botBase;
+    private boolean active                          = false;
+
+    VuforiaTrackable stoneTarget                    = null;
+    VuforiaTrackables targetsSkyStoneTrackables     = null;
 
 
-    VuforiaTrackable stoneTarget = null;
-    VuforiaTrackables targetsSkyStoneTrackables = null;
-
-
-    VuMarkIdentification(
-            BotBase botBase,
+    public VuMarkIdentification(
             HardwareMap hardwareMap,
             Telemetry telemetry,
-            String vuForiaKey,
+            String trackableAssetName,
             VuforiaLocalizer.CameraDirection cameraChoice,
-            boolean debug) {
+            boolean debug)
+    {
 
         this.DEBUG = debug;
         this.telemetry = telemetry;
-        this.botBase = botBase;
 
         /*
          * To start up Vuforia, tell it the view that we wish to use for camera monitor (on the RC phone);
@@ -111,7 +98,7 @@ public class VuMarkIdentification {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
-        parameters.vuforiaLicenseKey = vuForiaKey;
+        parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraDirection = cameraChoice;
 
         /**
@@ -122,9 +109,9 @@ public class VuMarkIdentification {
 
         // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
-        targetsSkyStoneTrackables = vuforia.loadTrackablesFromAsset("Skystone");
+        targetsSkyStoneTrackables = vuforia.loadTrackablesFromAsset(trackableAssetName);
         stoneTarget = targetsSkyStoneTrackables.get(0);
-        stoneTarget.setName("Stone Target");
+        stoneTarget.setName(trackableAssetName);
 
         targetsSkyStoneTrackables.activate();
     }

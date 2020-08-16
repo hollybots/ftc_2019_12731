@@ -27,34 +27,27 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Navigation;
 
 import android.util.Log;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Navigation.NavigationInterface;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Utils.NavigationTypesEnum;
+import org.firstinspires.ftc.teamcode.Utils.SensorLocations;
 
-import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
-import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-
-public class SensorNavigation implements NavigationInterface{
+public class SensorNavigation implements NavigationInterface {
 
     private double inchFTCFieldWidth              = 0.0; // in inches
     private double inchFTCFieldLength             = 0.0; // in inches
@@ -204,7 +197,7 @@ public class SensorNavigation implements NavigationInterface{
     }
 
 
-    public FieldPlacement getSkyStone(String skyStoneTargetName) {
+    public FieldPlacement getTarget(String targetName) {
         return null;
     }
 

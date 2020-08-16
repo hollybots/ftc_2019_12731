@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Testing;
 
 import android.graphics.Color;
 
@@ -36,12 +36,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-
-import java.util.Locale;
+import org.firstinspires.ftc.teamcode.TeleOpModesBase;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Utils.VuMarkIdentification;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
@@ -63,7 +63,7 @@ public class TestSensors extends TeleOpModesBase
      */
 
     // VuForia Key, register online
-    protected static final String VUFORIA_KEY = "AXINfYT/////AAAAGfcLttUpcU8GheQqMMZAtnFDz/qRJOlHnxEna51521+PFcmEWc02gUQ1s4DchmXk+fFvt+afRNF+2UoUgoAyQNtfVjRNS0u4f5o4kka/jERVEtKlJ27pO4euCEjE1DQ+l8ecADKTd1aWu641OheSf/RqDJ7BSvDct/PYRfRLfShAfBUxaFT3+Ud+6EL31VTmZKiylukvCnHaaQZxDmB2cCDdYFeK2CDwNIWoMx2VvweehNARttNvSR3cp4AepbtWnadsEnDQaStDv8jN09iE7CRWmMY8rrP8ba/O/eVlz0vzU7Fhtf2jXpSvCJn0qDw+1UK/bHsD/vslhdp+CBNcW7bT3gNHgTOrnIcldX2YhgZS";
+    protected String TRACKABLE_ASSET_NAME                                       = "Skystone";
     protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = FRONT;
 
     // alignment camera from center
@@ -198,10 +198,9 @@ public class TestSensors extends TeleOpModesBase
             VUMARK
          */
         vuMark  = new VuMarkIdentification(
-                botBase,
                 hardwareMap,
                 telemetry,
-                VUFORIA_KEY,
+                TRACKABLE_ASSET_NAME,
                 CAMERA_CHOICE,
                 this.DEBUG
         );

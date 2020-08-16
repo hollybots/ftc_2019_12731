@@ -1,8 +1,11 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Testing;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+import org.firstinspires.ftc.teamcode.AutonomousOpModesBase;
+import org.firstinspires.ftc.teamcode.Utils.BotSounds;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
 
 @Autonomous(name="Speed Calibration", group="1")
 //@Disabled
@@ -48,12 +51,6 @@ public class SpeedTest extends AutonomousOpModesBase {
 
         DEBUG = true;
         super.initAutonomous();
-
-
-        /* **********************************
-           LIGHTS
-        */
-        botBase.setBling(0.7745);
     }
 
     @Override
@@ -160,8 +157,6 @@ public class SpeedTest extends AutonomousOpModesBase {
                 }
             }
         }
-
-        vuMark.stop();
         stopMoving();
     }
 

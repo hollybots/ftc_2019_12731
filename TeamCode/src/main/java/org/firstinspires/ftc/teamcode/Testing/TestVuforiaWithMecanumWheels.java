@@ -27,13 +27,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Testing;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import com.qualcomm.ftccommon.SoundPlayer;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import org.firstinspires.ftc.teamcode.Navigation.NavigationInterface;
+import org.firstinspires.ftc.teamcode.TeleOpModesBase;
+import org.firstinspires.ftc.teamcode.Utils.BotSounds;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Navigation.VuforiaNavigation;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 
@@ -160,7 +163,7 @@ public class TestVuforiaWithMecanumWheels extends TeleOpModesBase
         }
 
 
-        FieldPlacement stoneRelativeplacement = navigation.getSkyStone("Stone Target");
+        FieldPlacement stoneRelativeplacement = navigation.getTarget("Stone Target");
         if (stoneRelativeplacement != null ) {
             botSounds.play("ss_roger_roger");
             telemetry.addData("Stone:", "Travel: (%.1f, %.1f) - Heading : %.1f rad.",

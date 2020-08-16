@@ -3,24 +3,30 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.Utils.BlinkinBling;
+
+
+/**
+ * This class abstracts the Robot propulsion sytem.
+ * It can be used with any types of wheel or motors.
+ */
 
 public class BotBase {
 
     static final boolean DEBUG = true;
 
+
+    /**
+     * DC MOTORS RELATED CONSTANTS
+     */
     static final double TORQUENADO_COUNTS_PER_MOTOR_REV = 1440;                 // eg: REV Motor Encoder
     static final double NEVEREST40_COUNTS_PER_MOTOR_REV = 1120;                 // eg: REV Motor Encoder
 
     static final double PROPULSION_DRIVE_GEAR_REDUCTION = 1.3;                  // This is < 1.0 if geared UP > 1 we are gering down (the small drives the big)
     static final double WHEEL_CIRCUMFERENCE = 4.0 * 3.14159;        // For figuring circumference
     static final double PROPULSION_ENCODER_COUNTS_PER_INCH = (TORQUENADO_COUNTS_PER_MOTOR_REV * PROPULSION_DRIVE_GEAR_REDUCTION) / WHEEL_CIRCUMFERENCE;
-
-
-    private BlinkinBling bling = null;
 
 
     // Timekeeper OpMode members.
@@ -32,13 +38,16 @@ public class BotBase {
     private DcMotor rearLeftDrive = null;
     private DcMotor rearRightDrive = null;
 
+    // Decorative LEDs
+    private BlinkinBling bling = null;
+
 
     /**
      * initRobot()
      * <p>
      * Configure the Hardware according to the Team Hardware Spreadsheet.
      */
-    BotBase(HardwareMap hardwareMap) {
+    public BotBase(HardwareMap hardwareMap) {
 
 
         /* ************************************
@@ -96,12 +105,16 @@ public class BotBase {
         /* ***********************************
             LED LIGHTS
          */
-        bling = new BlinkinBling(hardwareMap);
-
+        try {
+            bling = new BlinkinBling(hardwareMap);
+        } catch (Exception e) {
+            bling = null;
+            Log.d("BOTBASE: ", "Cannot intialize Bling");
+        }
 
     }
 
-    protected void stop() {
+    public void stop() {
         if (frontLeftDrive != null) {
             frontLeftDrive.setPower(0.0);
         }
@@ -116,19 +129,19 @@ public class BotBase {
         }
     }
 
-    protected DcMotor getFrontRightDrive() {
+    public DcMotor getFrontRightDrive() {
         return frontRightDrive;
     }
 
-    protected DcMotor getFrontLeftDrive() {
+    public DcMotor getFrontLeftDrive() {
         return frontLeftDrive;
     }
 
-    protected DcMotor getRearRightDrive() {
+    public DcMotor getRearRightDrive() {
         return rearRightDrive;
     }
 
-    protected DcMotor getRearLeftDrive() {
+    public DcMotor getRearLeftDrive() {
         return rearLeftDrive;
     }
 

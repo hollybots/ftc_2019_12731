@@ -29,7 +29,6 @@
 
 package org.firstinspires.ftc.teamcode;
 
-//import com.disnodeteam.dogecv.detectors.roverrukus.GoldAlignDetector;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -41,7 +40,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -54,13 +52,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Utils.TravelDirection;
+import org.firstinspires.ftc.teamcode.Utils.VuMarkIdentification;
 
 
-
-import java.util.List;
 import java.util.Random;
 
-import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 
@@ -77,7 +75,11 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected static final double CLOSE_ENOUGH_Y                = 1.0;
 
     // Will dump debug information in the LogCat if true
-    boolean DEBUG                             = false;
+    protected boolean DEBUG                               = false;
+
+    // Will iniatiate VUFORIA
+    protected Boolean USE_VUFORIA                         = true;
+    protected String TRACKABLE_ASSET_NAME                 = "Skystone";
 
     /**
      * FIELD CONSTANT
@@ -115,8 +117,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
      * NAVIGATION CONSTANTS
      */
 
-    // VuForia Key, register online
-    protected static final String VUFORIA_KEY = "AXINfYT/////AAAAGfcLttUpcU8GheQqMMZAtnFDz/qRJOlHnxEna51521+PFcmEWc02gUQ1s4DchmXk+fFvt+afRNF+2UoUgoAyQNtfVjRNS0u4f5o4kka/jERVEtKlJ27pO4euCEjE1DQ+l8ecADKTd1aWu641OheSf/RqDJ7BSvDct/PYRfRLfShAfBUxaFT3+Ud+6EL31VTmZKiylukvCnHaaQZxDmB2cCDdYFeK2CDwNIWoMx2VvweehNARttNvSR3cp4AepbtWnadsEnDQaStDv8jN09iE7CRWmMY8rrP8ba/O/eVlz0vzU7Fhtf2jXpSvCJn0qDw+1UK/bHsD/vslhdp+CBNcW7bT3gNHgTOrnIcldX2YhgZS";
 
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
@@ -234,7 +234,6 @@ public class AutonomousOpModesBase extends LinearOpMode {
 //    @Override
     public void runOpMode() {}
 
-
     protected void initAutonomous() {
 
         botBase     = new BotBase(hardwareMap);
@@ -263,14 +262,15 @@ public class AutonomousOpModesBase extends LinearOpMode {
         /* ************************************
             VUMARK
          */
-        vuMark  = new VuMarkIdentification(
-            botBase,
-            hardwareMap,
-            telemetry,
-            VUFORIA_KEY,
-            CAMERA_CHOICE,
-            this.DEBUG
-        );
+        if (USE_VUFORIA) {
+            vuMark  = new VuMarkIdentification(
+                    hardwareMap,
+                    telemetry,
+                    TRACKABLE_ASSET_NAME,
+                    CAMERA_CHOICE,
+                    this.DEBUG
+            );
+        }
 
 
         /* ***********************************
@@ -336,11 +336,23 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
+     * This free the resources and objects created for this opmode
+     */
+    protected void terminateAutonomous()
+    {
+        if (vuMark != null) {
+            vuMark.stop();
+        }
+        stopMoving();
+    }
+
+    /**
      * This function will add the angle passed in parameter to the current heading
      *
      * @param angle:    degrees to add to the current heading
      */
-    protected void turn(double angle) {
+    protected void turn(double angle)
+    {
 
         Orientation angles = gyro.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         double actualAngle = AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle));

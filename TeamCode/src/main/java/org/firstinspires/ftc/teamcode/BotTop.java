@@ -10,6 +10,10 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Servo;
 
 
+/**
+ * This class abstracts the Robot mission related hardware
+ */
+
 public class BotTop {
 
     static final boolean DEBUG                                  = true;
@@ -24,7 +28,7 @@ public class BotTop {
 
 
     /* ************************************
-        CD Motors
+        DC Motors
     */
     private DcMotor     dcMotor                     = null;
 
@@ -38,14 +42,14 @@ public class BotTop {
     /* ************************************
         SERVOS
     */
-    private Servo servo     = null;
+    private Servo servo                             = null;
 
 
     /* ************************************
         LIMIT SWITCHES
     */
-    DigitalChannel limitDirection1 = null;
-    DigitalChannel limitDirection2 = null;
+    DigitalChannel limitDirection1                  = null;
+    DigitalChannel limitDirection2                  = null;
 
 
     /**
@@ -58,13 +62,10 @@ public class BotTop {
 
 
     /**
-     * initRobot()
-     *
-     *    Configure the Hardware according to the Team Hardware Spreadsheet.
+     *    Instantiate and configure the Hardware according to the Team Hardware Spreadsheet.
      */
-    BotTop(HardwareMap hardwareMap) {
-
-
+    public BotTop(HardwareMap hardwareMap)
+    {
         /* ************************************
             DC MOTORS
         */
@@ -123,10 +124,14 @@ public class BotTop {
         }
     }
 
-    public void stopAll() {
+    public void stopAll()
+    {
     }
 
-
+    /**
+     * This method should be completed and called during the idle part of autonomous mode
+     * @return
+     */
     public Boolean checkAllLimitSwitches()
     {
         return true;

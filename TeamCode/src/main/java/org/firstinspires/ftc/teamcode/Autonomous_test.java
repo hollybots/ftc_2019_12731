@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+import org.firstinspires.ftc.teamcode.Utils.BotSounds;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
 
 @Autonomous(name="Test Suite", group="1")
 //@Disabled

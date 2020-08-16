@@ -2,11 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.Servo;
-import android.graphics.Color;
+
+import org.firstinspires.ftc.teamcode.Utils.BotSounds;
+import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
 
 @Autonomous(name="Base Team 12731", group="none")
 @Disabled
@@ -101,9 +100,11 @@ public class Autonomous_12731 extends AutonomousOpModesBase {
             telemetry.update();
         }
 
-        vuMark.stop();
-        stopMoving();
+        super.terminateAutonomous();
+
     }
+
+
 
     protected void taskState_1() {
         currentState = STATE_2;
