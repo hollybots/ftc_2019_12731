@@ -14,7 +14,7 @@
  * Neither the name of FIRST nor the names of its contributors may be used to endorse or
  * promote products derived from this software without specific prior written permission.
  *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY"S PATENT RIGHTS ARE GRANTED BY THIS
  * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -52,6 +52,8 @@ import com.qualcomm.ftccommon.R;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.firstinspires.ftc.teamcode.Utils.TestDeviceTypes;
+
 
 
 /**
@@ -61,6 +63,20 @@ import java.util.List;
 //@Disabled
 public class IoTests extends OpMode
 {
+
+    protected static final int state_IDLE                   = 0;
+    protected static final int state_SELECT_DEVICE          = 1;
+    protected static final int state_SERVO_SELECTION        = 2;
+    protected static final int state_I2C_SELECTION          = 3;
+    protected static final int state_SERVO_CONTROL          = 4;
+    protected static final int state_DINPUT_SELECTION       = 5;
+
+
+    /****
+     * DEVICES
+     */
+    String[] devices = {"NONE", "DCMOTOR", "SERVO", "I2C", "DIGITAL INPUT"};
+
     /***
      * OUTPUTS (will be connected to the gamepad)
      */
@@ -85,15 +101,32 @@ public class IoTests extends OpMode
     /**
      * State variables
      */
-    private int selectingServoMode = 0;
+
+    private int current_state = state_IDLE;
+    // General selection states
     private Boolean left_bumper_was_down = false;
     private Boolean right_bumper_was_down = false;
+
+    private Boolean previous_gamepad_x = false;
+    private Boolean previous_gamepad_y = false;
+
+    // Devices selection
+    private int selecting_device_mode = 0;
+    private int current_device_selection = 0;
+
+    // Servo selection
     private double servo_current_value = 0.0;
     private int current_servo_selection = 0;
 
-    private int selectingI2cMode = 0;
+    // I2c Selection
     private int current_i2c_selection = 0;
-    public double current_distance = -1.0;
+    private double current_distance = -1.0;
+
+    // Digital input selection
+    private int current_dinput_selection = 0;
+    private Boolean current_input_state = false;
+
+
 
     /*
      * Code to run ONCE when the driver hits INIT
@@ -101,10 +134,11 @@ public class IoTests extends OpMode
     @Override
     public void init() {
 
-        servos       = new ArrayList();
+
         /*********************************************
-         * Configure Servos
+         * Harware map
          */
+        servos       = new ArrayList();
         for (int i=0; i<=5; i++) {
             try {
                 servos.add(hardwareMap.get(Servo.class, "servo" + i));
@@ -127,7 +161,6 @@ public class IoTests extends OpMode
             }
         }
 
-        // Map all the I2C - Distance Sensors
         i2cs       = new ArrayList();
         for (int i=0; i<=3; i++) {
             try {
@@ -137,8 +170,16 @@ public class IoTests extends OpMode
             }
         }
 
+        dinputs       = new ArrayList();
+        for (int i=0; i<=3; i++) {
+            try {
+                dinputs.add(hardwareMap.get(DigitalChannel.class, "dinput" + i));
+                dinputs.get(i).setMode(DigitalChannel.Mode.INPUT);
+            } catch (Exception e) {
+                Log.d("TEST_IO: ", "Cannot intialize dinput" + i);
+            }
+        }
     }
-
 
 
     /*
@@ -157,66 +198,110 @@ public class IoTests extends OpMode
 
     }
 
-
     /*
      * Code to run REPEATEDLY after the driver hits PLAY but before they hit STOP
      */
     @Override
     public void loop() {
-        /**
-         * INPUT SENSORS
-         */
-        i2cSelection();
-        if (selectingI2cMode == 0 ) {
-            double distance = i2cs.get(current_i2c_selection).getDistance(DistanceUnit.INCH);
-            if (distance != current_distance) {
-                Log.d("TEST_IO: ", String.format("Distance sensor %d: %.4f", current_i2c_selection, distance));
-                current_distance = distance;
-            }
-        }
 
-        /**
-         * INPUT GAMEPAD
-         */
-        double motor0_command                  = -gamepad1.right_stick_y;
-        double motor1_command                   = gamepad1.right_stick_x;
-        double motor2_command                  = -gamepad1.left_stick_y;
-        double motor3_command                   = gamepad1.left_stick_x;
+        switch (current_state) {
 
-        servoSelection();
-        if (selectingServoMode == 0) {
+            case state_IDLE:
+                i2cDisplay();
+                dInputDisplay();
+                outputPropulsion();
 
-            // servo are incremented by 0.1 each time the bumper button is pressed right -> + left -> -
-            if (gamepad1.left_bumper && !gamepad1.right_bumper) {
-                left_bumper_was_down = true;
-            }
-            else if (left_bumper_was_down && !gamepad1.left_bumper) {
-                servo_current_value = Math.max(0.0, servo_current_value - 0.1);
-                servos.get(current_servo_selection).setPosition(servo_current_value);
-                Log.d("TEST_IO: ", String.format("Setting Servo %d to %.2f", current_servo_selection, servo_current_value ));
-                left_bumper_was_down = false;
-            }
-            else if (gamepad1.right_bumper && !gamepad1.left_bumper) {
-                right_bumper_was_down = true;
-            }
-            else if (right_bumper_was_down && !gamepad1.right_bumper) {
-                servo_current_value = Math.min(0.0, servo_current_value + 0.1);
-                servos.get(current_servo_selection).setPosition(servo_current_value);
-                Log.d("TEST_IO: ", String.format("Setting Servo %d to %.2f", current_servo_selection, servo_current_value ));
-                right_bumper_was_down = false;
-            }
-        }
+                if (gamepad1.x) {
+                    previous_gamepad_x = true;
+                }
+                else if (!gamepad1.x && previous_gamepad_x) {
+                    Log.d("TEST_IO: ", "================= Entering DEVICE SELECTION mode. Use right and left bumper to select device ============");
+                    current_state = state_SELECT_DEVICE;
+                    previous_gamepad_x = false;
+                }
+                return;
+
+            case state_SELECT_DEVICE:
+                deviceSelection();
+                if (gamepad1.y) {
+                    previous_gamepad_y = true;
+                }
+                else if (!gamepad1.y && previous_gamepad_y) {
+
+                    if (devices[current_device_selection] == "SERVO") {
+                        Log.d("TEST_IO: ", "================= Entering SELECTING servo mode ================ ");
+                        Log.d("TEST_IO: ", "Current Servo: " + current_servo_selection);
+                        current_state = state_SERVO_SELECTION;
+                    }
+                    else if (devices[current_device_selection] == "I2C") {
+                        Log.d("TEST_IO: ", "================= Entering SELECTING i2c mode ============");
+                        Log.d("TEST_IO: ", "Current I2C: " + current_i2c_selection);
+                        current_state = state_I2C_SELECTION;
+                    }
+                    else if (devices[current_device_selection] ==  "DIGITAL INPUT") {
+                        Log.d("TEST_IO: ", "================= Entering SELECTING Digital Input mode ============");
+                        Log.d("TEST_IO: ", "Current Digital Input: " + current_dinput_selection);
+                        current_state = state_DINPUT_SELECTION;
+                    }
+                    else {
+                        current_state = state_IDLE;
+                    }
+                    previous_gamepad_y = false;
+                }
+                return;
+
+            case state_SERVO_SELECTION:
+                servoSelection();
+                if (gamepad1.y) {
+                    previous_gamepad_y = true;
+                }
+                else if (!gamepad1.y && previous_gamepad_y) {
+
+                    if (devices[current_device_selection] == "SERVO") {
+                        Log.d("TEST_IO: ", "================= MOVING servo " + current_servo_selection + " ============");
+                        current_state = state_SERVO_CONTROL;
+                    }
+                    else {
+                        current_state = state_IDLE;
+                    }
+                    previous_gamepad_y = false;
+                }
+                return;
+
+            case state_SERVO_CONTROL:
+                servoControl();
+                if (gamepad1.y) {
+                    previous_gamepad_y = true;
+                }
+                else if (!gamepad1.y && previous_gamepad_y) {
+                    current_state = state_IDLE;
+                    previous_gamepad_y = false;
+                }
+                return;
+
+            case state_I2C_SELECTION:
+                i2cSelection();
+                if (gamepad1.y) {
+                    previous_gamepad_y = true;
+                }
+                else if (!gamepad1.y && previous_gamepad_y) {
+                    current_state = state_IDLE;
+                    previous_gamepad_y = false;
+                }
+                return;
+
+            case state_DINPUT_SELECTION:
+                dInputSelection();
+                if (gamepad1.y) {
+                    previous_gamepad_y = true;
+                }
+                else if (!gamepad1.y && previous_gamepad_y) {
+                    current_state = state_IDLE;
+                    previous_gamepad_y = false;
+                }
+                return;
 
 
-        /**
-         * OUTPUT PROPULSION
-         */
-        if (selectingI2cMode == 0) {
-            // Send calculated power to wheels
-            motors.get(0).setPower(motor0_command);
-            motors.get(1).setPower(motor1_command);
-            motors.get(2).setPower(motor2_command);
-            motors.get(3).setPower(motor3_command);
         }
 
         // Show the elapsed game time and wheel power.
@@ -231,148 +316,228 @@ public class IoTests extends OpMode
         super.stop();
     }
 
+    /**
+     * Handles the selection of a device using left & right bumpers
+     * returns: If the program is in device section mode
+     * @return
+     */
+    private void deviceSelection()
+    {
+        /**
+         * In this mode we are using the bumpers to select a device
+         */
+        if (gamepad1.left_bumper && !gamepad1.right_bumper) {
+            left_bumper_was_down = true;
+            return;
+        }
+        if (!gamepad1.left_bumper && left_bumper_was_down) {
+            if (current_device_selection < 1) {
+                current_device_selection = devices.length-1;
+            } else {
+                current_device_selection--;
+            }
+            Log.d("TEST_IO: ", "Current Device: " + devices[current_device_selection]);
+            left_bumper_was_down = false;
+            return;
+        }
+        if (gamepad1.right_bumper && !gamepad1.left_bumper) {
+            right_bumper_was_down = true;
+            return;
+        }
+        if (right_bumper_was_down && !gamepad1.right_bumper) {
+            if (current_device_selection > devices.length-2) {
+                current_device_selection = 0;
+            } else {
+                current_device_selection++;
+            }
+            Log.d("TEST_IO: ", "Current Device: " + devices[current_device_selection]);
+            right_bumper_was_down = false;
+            return;
+        }
+    }
 
+
+    /***
+     * Process of selecting and controlling a servo
+     */
     private void servoSelection()
     {
-        if (selectingServoMode == 0) {
-            // to enter servo selection mode, press 2 bumpers at the same time
-            if (gamepad1.left_bumper && gamepad1.right_bumper) {
-                Log.d("TEST_IO: ", "================= Entering SELECTING servo mode ============");
-                selectingServoMode = 1;
-            }
+
+        if (gamepad1.left_bumper && !gamepad1.right_bumper) {
+            left_bumper_was_down = true;
             return;
         }
-
-        if (selectingServoMode == 1) {
-            // To start selecting, release both bumpers
-            if (!gamepad1.left_bumper && !gamepad1.right_bumper) {
-                selectingServoMode = 2;
+        if (!gamepad1.left_bumper && left_bumper_was_down) {
+            if (current_servo_selection < 1) {
+                current_servo_selection = servos.size()-1;
+            } else {
+                current_servo_selection--;
             }
+            Log.d("TEST_IO: ", "Current Servo: " + current_servo_selection);
+            left_bumper_was_down = false;
             return;
         }
-
-        if (selectingServoMode == 2) {
-            if (gamepad1.left_bumper && !gamepad1.right_bumper) {
-                left_bumper_was_down = true;
-                return;
-            }
-            if (!gamepad1.left_bumper && left_bumper_was_down ) {
-                current_servo_selection = Math.max(current_servo_selection - 1, 0);
-                Log.d("TEST_IO: ", "Current Servo: " + current_servo_selection);
-                left_bumper_was_down = false;
-                return;
-            }
-            if (gamepad1.right_bumper && !gamepad1.left_bumper) {
-                right_bumper_was_down = true;
-                return;
-            }
-            if (right_bumper_was_down && !gamepad1.right_bumper) {
-                current_servo_selection = Math.max(current_servo_selection + 1, 0);
-                Log.d("TEST_IO: ", "Current Servo: " + current_servo_selection);
-                right_bumper_was_down = false;
-                return;
-            }
-
-            if (gamepad1.right_bumper && gamepad1.left_bumper) {
-                selectingServoMode = 3;
-                return;
-            }
-        }
-
-        if (selectingServoMode == 3) {
-            if (!gamepad1.right_bumper && !gamepad1.left_bumper) {
-                Log.d("TEST_IO: ", "================= Leaving SELECTING servo mode ============");
-                selectingServoMode = 4;
-                servo_current_value = 0;
-                servos.get(current_servo_selection).setPosition(servo_current_value);
-            }
+        if (gamepad1.right_bumper && !gamepad1.left_bumper) {
+            right_bumper_was_down = true;
             return;
         }
-
-        if (selectingServoMode == 4) {
-            // Just we can skip a loop
-            selectingServoMode = 0;
+        if (right_bumper_was_down && !gamepad1.right_bumper) {
+            if (current_servo_selection > servos.size()-2) {
+                current_servo_selection = 0;
+            } else {
+                current_servo_selection++;
+            }
+            Log.d("TEST_IO: ", "Current Servo: " + current_servo_selection);
+            right_bumper_was_down = false;
             return;
         }
+        return;
     }
 
 
+    /***
+     * Process of controlling a servo
+     */
+    private void servoControl()
+    {
+        // servo are incremented by 0.1 each time the bumper button is pressed right -> + left -> -
+        if (gamepad1.left_bumper && !gamepad1.right_bumper) {
+            left_bumper_was_down = true;
+            return;
+        }
+
+        if (left_bumper_was_down && !gamepad1.left_bumper) {
+            servo_current_value = Math.max(0.0, servo_current_value - 0.1);
+            servos.get(current_servo_selection).setPosition(servo_current_value);
+            Log.d("TEST_IO: ", String.format("Setting Servo %d to %.2f", current_servo_selection, servo_current_value ));
+            left_bumper_was_down = false;
+            return;
+        }
+
+        if (gamepad1.right_bumper && !gamepad1.left_bumper) {
+            right_bumper_was_down = true;
+            return;
+        }
+
+        if (right_bumper_was_down && !gamepad1.right_bumper) {
+            servo_current_value = Math.min(1.0, servo_current_value + 0.1);
+            servos.get(current_servo_selection).setPosition(servo_current_value);
+            Log.d("TEST_IO: ", String.format("Setting Servo %d to %.2f", current_servo_selection, servo_current_value ));
+            right_bumper_was_down = false;
+            return;
+        }
+        return;
+    }
+
+
+    /**"
+     * Process of selecting a I2c device for monitoring
+     */
     private void i2cSelection()
     {
-        if (selectingI2cMode == 0) {
-            // to enter servo selection mode, press 2 bumpers at the same time
-            if (gamepad1.left_stick_button) {
-                Log.d("TEST_IO: ", "================= Entering SELECTING i2c mode ============");
-                selectingI2cMode = 1;
-            }
+
+        if (gamepad1.left_bumper && !gamepad1.right_bumper) {
+            left_bumper_was_down = true;
             return;
         }
-
-        if (selectingI2cMode == 1) {
-            // To start selecting, release stick button
-            if (!gamepad1.left_stick_button) {
-                selectingI2cMode = 2;
+        if (!gamepad1.left_bumper && left_bumper_was_down) {
+            if (current_i2c_selection < 1) {
+                current_i2c_selection = i2cs.size()-1;
+            } else {
+                current_i2c_selection--;
             }
+            Log.d("TEST_IO: ", "Current I2C: " + current_i2c_selection);
+            left_bumper_was_down = false;
             return;
         }
-
-        if (selectingI2cMode == 2) {
-            if (gamepad1.left_stick_y > 0) {
+        if (gamepad1.right_bumper && !gamepad1.left_bumper) {
+            right_bumper_was_down = true;
+            return;
+        }
+        if (right_bumper_was_down && !gamepad1.right_bumper) {
+            if (current_i2c_selection > i2cs.size()-2) {
                 current_i2c_selection = 0;
-                return;
+            } else {
+                current_i2c_selection++;
             }
-            if (gamepad1.left_stick_y < 0) {
-                current_i2c_selection = 1;
-                return;
-            }
-            if (gamepad1.left_stick_x < 0) {
-                current_i2c_selection = 2;
-                return;
-            }
-            if (gamepad1.left_stick_x > 0) {
-                current_i2c_selection = 3;
-                return;
-            }
-            if (gamepad1.left_stick_button) {
-                selectingI2cMode = 3;
-            }
+            Log.d("TEST_IO: ", "Current I2C: " + current_i2c_selection);
+            right_bumper_was_down = false;
             return;
         }
 
-        if (selectingI2cMode == 3) {
-            if (!gamepad1.left_stick_button) {
-                Log.d("TEST_IO: ", "================= Leaving SELECTING i2c mode ============");
-                selectingI2cMode = 4;
+        return;
+    }
+
+
+    /**"
+     * Process of selecting a I2c device for monitoring
+     */
+    private void dInputSelection()
+    {
+        if (gamepad1.left_bumper && !gamepad1.right_bumper) {
+            left_bumper_was_down = true;
+            return;
+        }
+        if (!gamepad1.left_bumper && left_bumper_was_down) {
+            if (current_dinput_selection < 1) {
+                current_dinput_selection = dinputs.size()-1;
+            } else {
+                current_dinput_selection--;
             }
+            Log.d("TEST_IO: ", "Current Digital Input: " + current_dinput_selection);
+            left_bumper_was_down = false;
+            return;
+        }
+        if (gamepad1.right_bumper && !gamepad1.left_bumper) {
+            right_bumper_was_down = true;
+            return;
+        }
+        if (right_bumper_was_down && !gamepad1.right_bumper) {
+            if (current_dinput_selection > dinputs.size()-2) {
+                current_dinput_selection = 0;
+            } else {
+                current_dinput_selection++;
+            }
+            Log.d("TEST_IO: ", "Current Digital Input: " + current_dinput_selection);
+            right_bumper_was_down = false;
             return;
         }
 
-        if (selectingI2cMode == 4) {
-            // Just we can skip a loop
-            selectingI2cMode = 0;
-            return;
+        return;
+    }
+
+
+    private void i2cDisplay() {
+        double distance = i2cs.get(current_i2c_selection).getDistance(DistanceUnit.INCH);
+        if (distance != current_distance) {
+            Log.d("TEST_IO: ", String.format("Distance sensor %d: %.4f", current_i2c_selection, distance));
+            current_distance = distance;
         }
     }
 
-//
-//    private void loadTestConfigurationFile() {
-//
-//        RobotConfigFileManager cfgFileMgr = new RobotConfigFileManager();
-//        AppUtil appUtil = AppUtil.getInstance();
-//        this.context = appUtil.getApplication();
-//        this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
-//        RobotConfigFile file;
-//
-//
-////        String key = context.getString(R.string.pref_hardware_config_filename);
-////        String objSerialized;
-//
-//
-////        Log.d("TEST_IO: ", "Key " + key );
-////        objSerialized = preferences.getString(key, null);
-////        Log.d("TEST_IO: ", "objSerialized " + objSerialized );
-//
-//        file = RobotConfigFile.fromString(cfgFileMgr, "{\"isDirty\":false,\"location\":\"LOCAL_STORAGE\",\"name\":\"io_test\",\"resourceId\":0}");
-//        cfgFileMgr.setActiveConfig(file);
-//    }
+    private void dInputDisplay() {
+        Boolean state = dinputs.get(current_dinput_selection).getState();
+        if (state != current_input_state) {
+            Log.d("TEST_IO: ", String.format("Digital Input #%d state: %b", current_dinput_selection, state));
+            current_input_state = state;
+        }
+    }
+
+
+    private void outputPropulsion() {
+        if (selecting_device_mode == 0) {
+
+            double motor0_command                  = -gamepad1.right_stick_y;
+            double motor1_command                   = gamepad1.right_stick_x;
+            double motor2_command                  = -gamepad1.left_stick_y;
+            double motor3_command                   = gamepad1.left_stick_x;
+
+            // Send calculated power to wheels
+            motors.get(0).setPower(motor0_command);
+            motors.get(1).setPower(motor1_command);
+            motors.get(2).setPower(motor2_command);
+            motors.get(3).setPower(motor3_command);
+        }
+    }
+
 }
