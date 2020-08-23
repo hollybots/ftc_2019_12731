@@ -30,10 +30,9 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.teamcode.BotBase;
-import org.firstinspires.ftc.teamcode.Utils.WheelPower;
+
+import org.firstinspires.ftc.teamcode.Components.WheelPower;
 
 
 
@@ -168,9 +167,20 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         boolean ready                       =  gamepad2.y;
         boolean dodge                       =  gamepad2.back;
 
+
+        /**
+         * GET UPDATES ON POSITION
+         */
+        botBase.odometer.globalCoordinatePositionUpdate();
+
+        /**
+         * GET UPDATES ON PROPULSTION COMMANDS
+         */
         wheels                              =  calcWheelPower(clockwise, forward, right);
 
-        // This is for safety
+        /**
+         * GET UPDATES ON LIMIT SWITCHES
+         */
         botTop.checkAllLimitSwitches();
 
         /**
@@ -235,6 +245,8 @@ public class TeleOpMode_12731 extends TeleOpModesBase
                 wheels.rear_right /= 2;
             }
         }
+
+
 
 
         /**

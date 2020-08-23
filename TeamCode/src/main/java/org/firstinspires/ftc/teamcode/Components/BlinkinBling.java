@@ -1,12 +1,9 @@
-package org.firstinspires.ftc.teamcode.Utils;
+package org.firstinspires.ftc.teamcode.Components;
 
 import android.util.Log;
 
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class BlinkinBling  {
 
@@ -20,6 +17,7 @@ public class BlinkinBling  {
         } catch (Exception e) {
             blinkinModule = null;
             Log.d("BOTBASE: ", "Cannot intialize Bling");
+            throw(e);
         }
     }
 

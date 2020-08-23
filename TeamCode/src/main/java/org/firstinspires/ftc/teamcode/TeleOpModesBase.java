@@ -4,14 +4,13 @@ import android.util.Log;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import org.firstinspires.ftc.teamcode.Utils.WheelPower;
-import org.firstinspires.ftc.teamcode.Utils.TravelDirection;
+import org.firstinspires.ftc.teamcode.Components.WheelPower;
+import org.firstinspires.ftc.teamcode.Components.TravelDirection;
 
 /**
  * Teleop mode.

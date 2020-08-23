@@ -39,12 +39,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.TeleOpModesBase;
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
-import org.firstinspires.ftc.teamcode.Utils.VuMarkIdentification;
-
-import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 /**
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list

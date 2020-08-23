@@ -43,9 +43,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.BotBase;
-import org.firstinspires.ftc.teamcode.Navigation.NavigationInterface;
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
-import org.firstinspires.ftc.teamcode.Utils.NavigationTypesEnum;
+import org.firstinspires.ftc.teamcode.Components.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Components.NavigationTypesEnum;
 
 import java.util.ArrayList;
 import java.util.List;

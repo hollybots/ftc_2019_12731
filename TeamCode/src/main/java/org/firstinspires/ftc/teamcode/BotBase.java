@@ -7,7 +7,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.Utils.BlinkinBling;
+import org.firstinspires.ftc.teamcode.Components.BlinkinBling;
+import org.firstinspires.ftc.teamcode.Components.Odometer;
 
 
 /**
@@ -46,6 +47,9 @@ public class BotBase {
     // Webcam
     private WebcamName webcam           = null;
 
+    // Odometer
+    public Odometer odometer            = null;
+
 
     /**
      * initRobot()
@@ -53,6 +57,17 @@ public class BotBase {
      * Configure the Hardware according to the Team Hardware Spreadsheet.
      */
     public BotBase(HardwareMap hardwareMap) {
+
+
+        /* ***********************************
+            ODOMETRY SYSTEM
+        */
+        try {
+            odometer = new Odometer(hardwareMap);
+        } catch (Exception e) {
+            odometer = null;
+            Log.d("BOTBASE: ", "Cannot intialize Odometer");
+        }
 
 
         /* ***********************************

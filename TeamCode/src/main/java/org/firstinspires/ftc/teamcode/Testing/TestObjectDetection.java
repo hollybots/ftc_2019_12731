@@ -29,28 +29,14 @@
 
 package org.firstinspires.ftc.teamcode.Testing;
 
-import android.graphics.Color;
-
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.TeleOpModesBase;
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
-import org.firstinspires.ftc.teamcode.Utils.ObjectIdentificationInterface;
-import org.firstinspires.ftc.teamcode.Utils.TensorFlowObjectIdentification;
-import org.firstinspires.ftc.teamcode.Utils.VuMarkIdentification;
-import org.firstinspires.ftc.teamcode.Utils.WheelPower;
-
-import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
+import org.firstinspires.ftc.teamcode.Components.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Components.ObjectIdentificationInterface;
+import org.firstinspires.ftc.teamcode.Components.TensorFlowObjectIdentification;
+import org.firstinspires.ftc.teamcode.Components.VuMarkIdentification;
+import org.firstinspires.ftc.teamcode.Components.WheelPower;
 
 /**
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list

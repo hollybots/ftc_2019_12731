@@ -1,13 +1,10 @@
 
-package org.firstinspires.ftc.teamcode.Utils;
+package org.firstinspires.ftc.teamcode.Components;
 
 import android.content.Context;
 
 import com.qualcomm.ftccommon.SoundPlayer;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import java.util.Hashtable;
-import java.util.Map;
 
 /**
  * This class plays a redefined song indluded in the SkyStone resources.

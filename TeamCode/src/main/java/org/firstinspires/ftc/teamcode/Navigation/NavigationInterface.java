@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.Navigation;
 
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
-import org.firstinspires.ftc.teamcode.Utils.NavigationTypesEnum;
+import org.firstinspires.ftc.teamcode.Components.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Components.NavigationTypesEnum;
 
 public interface NavigationInterface
 {

@@ -40,33 +40,26 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
-import org.firstinspires.ftc.teamcode.Utils.TravelDirection;
-import org.firstinspires.ftc.teamcode.Utils.VuMarkIdentification;
-import org.firstinspires.ftc.teamcode.Utils.TensorFlowObjectIdentification;
+import org.firstinspires.ftc.teamcode.Components.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Components.TravelDirection;
+import org.firstinspires.ftc.teamcode.Components.VuMarkIdentification;
+import org.firstinspires.ftc.teamcode.Components.TensorFlowObjectIdentification;
 
-import org.firstinspires.ftc.teamcode.Utils.ObjectIdentificationInterface;
+import org.firstinspires.ftc.teamcode.Components.ObjectIdentificationInterface;
 
 
 import java.util.Random;
-
-import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
-
 
 
 /**
@@ -146,20 +139,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     final float CAMERA_FORWARD_DISPLACEMENT  = 8.0f * mmPerInch;   // eg: Camera is 4 Inches in front of robot center
     final float CAMERA_VERTICAL_DISPLACEMENT = 0.0f * mmPerInch;   // eg: Camera is 8 Inches above ground
-    final float CAMERA_LEFT_DISPLACEMENT     = 0.0f * mmPerInch;    // eg: Camera is ON the left side
-
-
-//
-//    protected static final int CAMERA_FORWARD_DISPLACEMENT        = 150;   // eg: Camera is 150 mm in front of robot center
-//    protected static final int CAMERA_VERTICAL_DISPLACEMENT       = 110;   // eg: Camera is 110 mm above ground
-//    protected static final int CAMERA_LEFT_DISPLACEMENT           = 40;     // eg: Camera is 40 mm to the left of center line
-
-    // Select which camera you want use.  The FRONT camera is the one on the same side as the screen.
-    // Valid choices are:  BACK or FRONT
-    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = FRONT;
-    protected static final boolean PHONE_IS_IN_PORTRAIT                         = false;
-
-    protected static final int FIND_NAVIGATION_BEACON_MAX_RETRY              = 10;
+    final float CAMERA_LEFT_DISPLACEMENT     = 0.0f * mmPerInch;    // eg: Camera is 0 to the left of center
 
 
     /**

@@ -4,8 +4,8 @@ package org.firstinspires.ftc.teamcode.Testing;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.AutonomousOpModesBase;
-import org.firstinspires.ftc.teamcode.Utils.BotSounds;
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Components.BotSounds;
+import org.firstinspires.ftc.teamcode.Components.FieldPlacement;
 
 @Autonomous(name="Speed Calibration", group="1")
 //@Disabled

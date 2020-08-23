@@ -41,10 +41,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.Navigation.NavigationInterface;
-import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
-import org.firstinspires.ftc.teamcode.Utils.NavigationTypesEnum;
-import org.firstinspires.ftc.teamcode.Utils.SensorLocations;
+import org.firstinspires.ftc.teamcode.Components.FieldPlacement;
+import org.firstinspires.ftc.teamcode.Components.NavigationTypesEnum;
+import org.firstinspires.ftc.teamcode.Components.SensorLocations;
 
 
 public class SensorNavigation implements NavigationInterface {
