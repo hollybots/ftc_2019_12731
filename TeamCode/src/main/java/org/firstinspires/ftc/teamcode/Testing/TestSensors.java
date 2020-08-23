@@ -33,6 +33,7 @@ import android.graphics.Color;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -49,7 +50,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 @TeleOp(name="Test Sensors", group="3")
-//@Disabled
+@Disabled
 public class TestSensors extends TeleOpModesBase
 {
     static final double     AUTONOMOUS_SPEED            = 0.6;
@@ -57,17 +58,6 @@ public class TestSensors extends TeleOpModesBase
     static final double     K                           = 0.2;
     private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-
-    /**
-     * NAVIGATION CONSTANTS
-     */
-
-    // VuForia Key, register online
-    protected String TRACKABLE_ASSET_NAME                                       = "Skystone";
-    protected static final VuforiaLocalizer.CameraDirection CAMERA_CHOICE       = FRONT;
-
-    // alignment camera from center
-    protected static final double CAMERA_TO_CENTER               = -1.8;
 
     // Range Sensors
     ModernRoboticsI2cRangeSensor distanceFront = null;
@@ -83,12 +73,6 @@ public class TestSensors extends TeleOpModesBase
 
     ColorSensor bottomColor = null;
     ColorSensor frontColor = null;
-
-
-    /* VuMark detection
-     */
-    protected VuMarkIdentification vuMark  = null;
-    protected FieldPlacement stoneRelativePlacement             = null;
 
 
     /*
@@ -193,17 +177,6 @@ public class TestSensors extends TeleOpModesBase
             frontColor = null;
             dbugThis("Unable to map bottom_color");
         }
-
-                /* ************************************
-            VUMARK
-         */
-        vuMark  = new VuMarkIdentification(
-                hardwareMap,
-                telemetry,
-                TRACKABLE_ASSET_NAME,
-                CAMERA_CHOICE,
-                this.DEBUG
-        );
 
     }
 
@@ -408,21 +381,6 @@ public class TestSensors extends TeleOpModesBase
         }
 
         telemetry.addData("Battery Voltage", String.format("%.2f", getBatteryVoltage()));
-
-
-        // This is the distance from the camera to the actual part of the robot that must align with the center of the Vumark
-        double offset = CAMERA_TO_CENTER;
-        stoneRelativePlacement = vuMark.find();
-
-        if (stoneRelativePlacement != null) {
-            double delta = stoneRelativePlacement.y - CAMERA_TO_CENTER;
-            double absDelta = Math.abs(delta);
-            telemetry.addData("delta", String.format("%.2f", delta));
-        }
-
-        else {
-            telemetry.addData("delta", "Traget not found");
-        }
 
 
             telemetry.update();

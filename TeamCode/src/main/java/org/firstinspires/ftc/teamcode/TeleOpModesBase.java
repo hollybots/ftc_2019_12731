@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.teamcode.Utils.WheelPower;
+import org.firstinspires.ftc.teamcode.Utils.TravelDirection;
 
 /**
  * Teleop mode.
@@ -18,18 +20,65 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @Disabled
 public class TeleOpModesBase extends OpMode {
 
-    protected BotBase botBase;
-    protected BotTop  botTop;
 
-    Servo camera_pan_vertical = null;
-    double cameraPanVerticalPosition        = 0;
+    private static final double K                           = 0.6;
+    private static final double theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
 
-    protected boolean DEBUG = true;
+    protected BotBase botBase                               = null;
+    protected BotTop  botTop                                = null;
+
+    Servo camera_pan_vertical                               = null;
+    double cameraPanVerticalPosition                        = 0;
+
+    protected boolean DEBUG                                 = true;
+
+    private double[] ramp = {
+            -1,
+            -0.86,
+            -0.73,
+            -0.61,
+            -0.51,
+            -0.42,
+            -0.34,
+            -0.27,
+            -0.22,
+            -0.17,
+            -0.13,
+            -0.09,
+            -0.06,
+            -0.04,
+            -0.03,
+            -0.02,
+            -0.01,
+            0,
+            0.01,
+            0.02,
+            0.03,
+            0.04,
+            0.06,
+            0.09,
+            0.13,
+            0.17,
+            0.22,
+            0.27,
+            0.34,
+            0.42,
+            0.51,
+            0.61,
+            0.73,
+            0.86,
+            1
+    };
+
+    // State variable
+    int currentRampNumberForward                        = 20;  // index of 0 in the ramp
+    int currentRampNumberRight                          = 20;  // index of 0 in the ramp
+    double previousPowerForward                         = 0;
+    double previousPowerRight                           = 0;
 
 
     // Timekeeper OpMode members.
     protected ElapsedTime runtime = new ElapsedTime();
-
 
 
     /**
@@ -37,7 +86,8 @@ public class TeleOpModesBase extends OpMode {
      * Called once before the match when the "Init" button is pressed.
      */
     @Override
-    public void init() {
+    public void init()
+    {
 
         botBase     = new BotBase(hardwareMap);
         botTop      = new BotTop(hardwareMap);
@@ -56,7 +106,8 @@ public class TeleOpModesBase extends OpMode {
      * Called repeatedly during the match after the "Play" button is pressed.
      */
     @Override
-    public void loop() {
+    public void loop()
+    {
     }
 
 
@@ -65,12 +116,13 @@ public class TeleOpModesBase extends OpMode {
      * Called once at the end of the match when time runs out.
      */
     @Override
-    public void stop() {
-
+    public void stop()
+    {
         botBase.stop();
     }
 
-    protected void dbugThis(String s) {
+    protected void dbugThis(String s)
+    {
 
         if ( DEBUG == true ) {
             Log.d("TELEOP: ", s);
@@ -90,7 +142,8 @@ public class TeleOpModesBase extends OpMode {
 
 
     // Computes the current battery voltage
-    public double getBatteryVoltage() {
+    public double getBatteryVoltage()
+    {
         double result = Double.POSITIVE_INFINITY;
         for (VoltageSensor sensor : hardwareMap.voltageSensor) {
             double voltage = sensor.getVoltage();
@@ -101,4 +154,82 @@ public class TeleOpModesBase extends OpMode {
         return result;
     }
 
+    /**
+     * Takes a rotation, from the rotation joystick, a forward and right value from the translation joystick,
+     * will calculate the power on each mechanum wheels
+     * @param clockwise
+     * @param forward
+     * @param right
+     * @return
+     */
+    protected WheelPower calcWheelPower(double clockwise, double forward, double right)
+    {
+
+        WheelPower wheels = new WheelPower();
+
+        // Now add a tuning constant K for the rotate axis sensitivity.
+        // Start with K=0, and increase it very slowly (do not exceed K=1)
+        // to find the right value after you’ve got fwd/rev and strafe working:
+        clockwise = K * clockwise;
+
+        // if "theta" is measured CLOCKWISE from the zero reference:
+        double temp = forward * Math.cos(theta) + right * Math.sin(theta);
+        right = -forward * Math.sin(theta) + right * Math.cos(theta);
+        forward = temp;
+
+        // Now apply the inverse kinematic tranformation
+        // to convert your vehicle motion command
+        // to 4 wheel speed command:
+        wheels.front_left = forward + clockwise + right;
+        wheels.front_right = forward - clockwise - right;
+        wheels.rear_left = forward + clockwise - right;
+        wheels.rear_right = forward - clockwise + right;
+
+        // Finally, normalize and limit acceleration for the wheel speed command
+        // so that no wheel speed command exceeds magnitude of 1 and acceleration is kept under limit:
+        double calculatedPropulsionCommand = Math.abs(wheels.front_left);
+        if (Math.abs(wheels.front_right) > calculatedPropulsionCommand) {
+            calculatedPropulsionCommand = Math.abs(wheels.front_right);
+        }
+        if (Math.abs(wheels.rear_left) > calculatedPropulsionCommand) {
+            calculatedPropulsionCommand = Math.abs(wheels.rear_left);
+        }
+        if (Math.abs(wheels.rear_right) > calculatedPropulsionCommand) {
+            calculatedPropulsionCommand = Math.abs(wheels.rear_right);
+        }
+
+        if (calculatedPropulsionCommand > 1.0) {
+            wheels.front_left /= calculatedPropulsionCommand;
+            wheels.front_right /= calculatedPropulsionCommand;
+            wheels.rear_left /= calculatedPropulsionCommand;
+            wheels.rear_right /= calculatedPropulsionCommand;
+        }
+
+        return wheels;
+    }
+
+
+
+
+    private double rampUp(TravelDirection which, double setPoint) {
+
+        // use the IMU to limit acceleration
+
+        if (which == TravelDirection.FORWARD) {
+        }
+
+        return 0;
+    }
+
+
+    double findNextSetPointUp(double under) {
+
+        int i = 0;
+        while (ramp[i] < under) {
+            i++;
+        }
+        i = Math.min(Math.max(0, i), 40);
+
+        return ramp[i];
+    }
 }

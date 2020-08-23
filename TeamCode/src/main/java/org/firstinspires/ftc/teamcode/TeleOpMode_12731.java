@@ -33,6 +33,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.BotBase;
+import org.firstinspires.ftc.teamcode.Utils.WheelPower;
 
 
 
@@ -44,52 +45,6 @@ import org.firstinspires.ftc.teamcode.BotBase;
 //@Disabled
 public class TeleOpMode_12731 extends TeleOpModesBase
 {
-
-    private class WheelPower {
-        double front_left;
-        double front_right;
-        double rear_left;
-        double rear_right;
-    };
-    static final int CONTROL_FORWARD = 0;
-    static final int CONTROL_RIGHT = 1;
-    private double[] ramp = {
-            -1,
-            -0.86,
-            -0.73,
-            -0.61,
-            -0.51,
-            -0.42,
-            -0.34,
-            -0.27,
-            -0.22,
-            -0.17,
-            -0.13,
-            -0.09,
-            -0.06,
-            -0.04,
-            -0.03,
-            -0.02,
-            -0.01,
-            0,
-            0.01,
-            0.02,
-            0.03,
-            0.04,
-            0.06,
-            0.09,
-            0.13,
-            0.17,
-            0.22,
-            0.27,
-            0.34,
-            0.42,
-            0.51,
-            0.61,
-            0.73,
-            0.86,
-            1
-    };
 
     // This limits the power change to an 0.1 increment every 200ms 0,00005 power/s^2
     static final double  DELTA_T                        = 200; // in ms ) {
@@ -104,28 +59,13 @@ public class TeleOpMode_12731 extends TeleOpModesBase
     // Declare OpMode members.
     private ElapsedTime runtime = new ElapsedTime();
 
-    static final double     K                           = 0.6;
-    private double          theta                       = 0;   // gyro angle.  For field centric autonomous mode we will use this to orient the robot
-
-    boolean use2Controllers                             = true;
-
-
     // State variables
     boolean isClamping                                  = false;
     boolean waitForClampingButtonRelease                = false;
 
 
-    boolean isFastSpeedMode                                  = false;
-    boolean waitForSpeedButtonRelease                        = false;
-
-
-
-
-    double lastTimeWeCheckedSpeed                       = 0.0;
-    int currentRampNumberForward                        = 20;
-    int currentRampNumberRight                          = 20;
-    double previousPowerForward                             = 0;
-    double previousPowerRight                               = 0;
+    boolean isFastSpeedMode                             = false;
+    boolean waitForSpeedButtonRelease                   = false;
 
 
     int resetState                                      = 0;
@@ -201,13 +141,6 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         WheelPower wheels               = null;
 
         double now                      = runtime.milliseconds();
-        double deltaT                   = now - lastTimeWeCheckedSpeed;
-
-//        double slideUp                  = !use2Controllers ? gamepad1.right_trigger : gamepad2.right_trigger ;
-//        double slideDown                = !use2Controllers ? gamepad1.left_trigger : gamepad2.left_trigger;
-//        boolean clawDown                = !use2Controllers ? gamepad1.right_bumper : gamepad2.right_bumper;
-//        boolean clawUp                  = !use2Controllers ? gamepad1.left_bumper : gamepad2.left_bumper;
-
         double arm                      = -gamepad2.right_stick_y;
         double linearMotion             = -gamepad2.left_stick_y;
 
@@ -235,7 +168,7 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         boolean ready                       =  gamepad2.y;
         boolean dodge                       =  gamepad2.back;
 
-        wheels                              = calcWheelPower(clockwise, forward, right);
+        wheels                              =  calcWheelPower(clockwise, forward, right);
 
         // This is for safety
         botTop.checkAllLimitSwitches();
@@ -355,6 +288,9 @@ public class TeleOpMode_12731 extends TeleOpModesBase
         return resetState == 0 && readyState == 0 && dodgeState == 0;
     }
 
+    /**
+     * Starts a Movement combination
+     */
     private void startResetSequence() {
         // Start the movement - make sure there are no loops in these methods
 
@@ -376,110 +312,4 @@ public class TeleOpMode_12731 extends TeleOpModesBase
             resetState = 0;
         }
     }
-
-
-    /**
-     * Takes a rotation, from the rotation joystick, a forward and right value from the translation joystick,
-     * will calculate the power on each mechanum wheels
-     * @param clockwise
-     * @param forward
-     * @param right
-     * @return
-     */
-    private WheelPower calcWheelPower(double clockwise, double forward, double right) {
-
-        WheelPower wheels = new WheelPower();
-
-        // Now add a tuning constant K for the rotate axis sensitivity.
-        // Start with K=0, and increase it very slowly (do not exceed K=1)
-        // to find the right value after you’ve got fwd/rev and strafe working:
-        clockwise = K * clockwise;
-
-        // if "theta" is measured CLOCKWISE from the zero reference:
-        double temp = forward * Math.cos(theta) + right * Math.sin(theta);
-        right = -forward * Math.sin(theta) + right * Math.cos(theta);
-        forward = temp;
-
-        // Now apply the inverse kinematic tranformation
-        // to convert your vehicle motion command
-        // to 4 wheel speed command:
-        wheels.front_left = forward + clockwise + right;
-        wheels.front_right = forward - clockwise - right;
-        wheels.rear_left = forward + clockwise - right;
-        wheels.rear_right = forward - clockwise + right;
-
-        // Finally, normalize and limit acceleration for the wheel speed command
-        // so that no wheel speed command exceeds magnitude of 1 and acceleration is kept under limit:
-        double calculatedPropulsionCommand = Math.abs(wheels.front_left);
-        if (Math.abs(wheels.front_right) > calculatedPropulsionCommand) {
-            calculatedPropulsionCommand = Math.abs(wheels.front_right);
-        }
-        if (Math.abs(wheels.rear_left) > calculatedPropulsionCommand) {
-            calculatedPropulsionCommand = Math.abs(wheels.rear_left);
-        }
-        if (Math.abs(wheels.rear_right) > calculatedPropulsionCommand) {
-            calculatedPropulsionCommand = Math.abs(wheels.rear_right);
-        }
-
-        if (calculatedPropulsionCommand > 1.0) {
-            wheels.front_left /= calculatedPropulsionCommand;
-            wheels.front_right /= calculatedPropulsionCommand;
-            wheels.rear_left /= calculatedPropulsionCommand;
-            wheels.rear_right /= calculatedPropulsionCommand;
-        }
-
-        return wheels;
-    }
-
-
-
-    private double rampUp(int which, double setPoint) {
-
-        if (which == CONTROL_FORWARD) {
-
-            if (setPoint > previousPowerForward && setPoint > 0) {
-
-                previousPowerForward = Math.min(setPoint, previousPowerForward + MAX_CHANGE_IN_POWER_IN_DELTA_T);
-                return previousPowerForward;
-            }
-
-
-            if (setPoint < previousPowerForward && setPoint < 0) {
-
-                previousPowerForward = Math.max(setPoint, previousPowerForward - MAX_CHANGE_IN_POWER_IN_DELTA_T);
-                return previousPowerForward;
-            }
-
-            previousPowerForward = setPoint;
-            return previousPowerForward;
-        }
-//        else if (which == CONTROL_RIGHT) {
-//
-//            if ( setPoint < previousPowerRight) {
-//                currentRampNumberRight = Math.min(Math.max(0, currentRampNumberRight - 1), 40);
-//            }
-//            else if (setPoint > previousPowerRight) {
-//                currentRampNumberRight = Math.min(Math.max(0, currentRampNumberRight + 1), 40);
-//            }
-//
-//            previousPowerRight = ramp[currentRampNumberForward];
-//            return ramp[currentRampNumberForward];
-//        }
-
-        return 0;
-    }
-
-
-    double findNextSetPointUp(double under) {
-
-        int i = 0;
-        while (ramp[i] < under) {
-            i++;
-        }
-        i = Math.min(Math.max(0, i), 40);
-
-        return ramp[i];
-    }
-
-
 }

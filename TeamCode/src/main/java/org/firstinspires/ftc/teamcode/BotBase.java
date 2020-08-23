@@ -5,6 +5,8 @@ import android.util.Log;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Utils.BlinkinBling;
 
 
@@ -33,13 +35,16 @@ public class BotBase {
     ElapsedTime runtime = new ElapsedTime();
 
     // Robot Hardware
-    private DcMotor frontLeftDrive = null;
-    private DcMotor frontRightDrive = null;
-    private DcMotor rearLeftDrive = null;
-    private DcMotor rearRightDrive = null;
+    private DcMotor frontLeftDrive      = null;
+    private DcMotor frontRightDrive     = null;
+    private DcMotor rearLeftDrive       = null;
+    private DcMotor rearRightDrive      = null;
 
     // Decorative LEDs
-    private BlinkinBling bling = null;
+    private BlinkinBling bling          = null;
+
+    // Webcam
+    private WebcamName webcam           = null;
 
 
     /**
@@ -49,6 +54,16 @@ public class BotBase {
      */
     public BotBase(HardwareMap hardwareMap) {
 
+
+        /* ***********************************
+            WEB CAM
+        */
+        try {
+            webcam = hardwareMap.get(WebcamName.class, "webcam");
+        } catch (Exception e) {
+            webcam = null;
+            Log.d("BOTBASE: ", "Cannot intialize webcam");
+        }
 
         /* ************************************
             DC MOTORS
@@ -154,6 +169,10 @@ public class BotBase {
         if (bling != null) {
             bling.setBlinkinPattern(mode);
         }
+    }
+
+    public WebcamName getWebcam() {
+        return webcam;
     }
 
 

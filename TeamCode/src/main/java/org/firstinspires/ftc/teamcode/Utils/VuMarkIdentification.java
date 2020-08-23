@@ -38,10 +38,15 @@ import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 /**
  * This class abstracts the Vuforia engine.
@@ -55,10 +60,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
  * IMPORTANT: In order to use this OpMode, you need to obtain your own Vuforia license key as
  * is explained in {@link ConceptVuforiaNavigation}.
  */
-public class VuMarkIdentification {
-
+public class VuMarkIdentification implements ObjectIdentificationInterface
+{
     // VuForia Key, register online
-    protected static final String VUFORIA_KEY = "AXINfYT/////AAAAGfcLttUpcU8GheQqMMZAtnFDz/qRJOlHnxEna51521+PFcmEWc02gUQ1s4DchmXk+fFvt+afRNF+2UoUgoAyQNtfVjRNS0u4f5o4kka/jERVEtKlJ27pO4euCEjE1DQ+l8ecADKTd1aWu641OheSf/RqDJ7BSvDct/PYRfRLfShAfBUxaFT3+Ud+6EL31VTmZKiylukvCnHaaQZxDmB2cCDdYFeK2CDwNIWoMx2VvweehNARttNvSR3cp4AepbtWnadsEnDQaStDv8jN09iE7CRWmMY8rrP8ba/O/eVlz0vzU7Fhtf2jXpSvCJn0qDw+1UK/bHsD/vslhdp+CBNcW7bT3gNHgTOrnIcldX2YhgZS";
+    protected static final String VUFORIA_KEY = "AQSpIWb/////AAABmarkN2D6nEtEtiFZY75jnL8H12+mIcvqBOz+WbP/qxrgyY4JZJzBTN7NjGGX8q2gu0M06DZpIqUq8R0c06ZoXTOT/77I4+Hp8s4hwMr5jcZvqzq9TGgg/83hGs48KIRNW0kRiWWJulpUG8v+c+jNBW3csk/Un2yofaPK61SkPAQkLaddWk7j4zMZfk1lOaRv4H11MTX3g12DB2eVjRcv8jGC3Wt0T5q+zll0iLjqpegF2FrL2dxDyEb7dyfQJ+5OlnqotKESWhCMDEBTJZKgopJTA7Rnf5uUdLVzRGV2S0VoJFwG/eYc+SaP6jx1dTt3SqTEzs3GbY9u4HQms03n7WavQtc20U4SKU9eyXvhS6NX";
+
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
@@ -72,20 +78,22 @@ public class VuMarkIdentification {
      */
     private VuforiaLocalizer vuforia;
     private Telemetry telemetry;
-    private boolean DEBUG                           = false;
+    private boolean DEBUG                          = false;
 
     // active state
-    private boolean active                          = false;
+    private boolean active                         = false;
 
-    VuforiaTrackable stoneTarget                    = null;
-    VuforiaTrackables targetsSkyStoneTrackables     = null;
+    VuforiaTrackable mainTarget                    = null;  //
+    VuforiaTrackables targetTrackables             = null;  // List of all the trackable in
 
 
     public VuMarkIdentification(
             HardwareMap hardwareMap,
             Telemetry telemetry,
-            String trackableAssetName,
-            VuforiaLocalizer.CameraDirection cameraChoice,
+            String trackableAssetName,  // Trcakable file
+            String mainAssetName,       // Name of the trackable asset (for debug info. Can be anyting)
+            int targetIndex,            // index of the trackable in the trackable asset file
+            WebcamName webcam,
             boolean debug)
     {
 
@@ -93,13 +101,15 @@ public class VuMarkIdentification {
         this.telemetry = telemetry;
 
         /*
-         * To start up Vuforia, tell it the view that we wish to use for camera monitor (on the RC phone);
+         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
+         * We can pass Vuforia the handle to a camera preview resource (on the RC phone);
+         * If no camera monitor is desired, use the parameter-less constructor instead (commented out below).
          */
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = cameraChoice;
+        parameters.cameraName = webcam;
 
         /**
          * Instantiate the Vuforia engine
@@ -109,32 +119,32 @@ public class VuMarkIdentification {
 
         // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
-        targetsSkyStoneTrackables = vuforia.loadTrackablesFromAsset(trackableAssetName);
-        stoneTarget = targetsSkyStoneTrackables.get(0);
-        stoneTarget.setName(trackableAssetName);
+        targetTrackables = vuforia.loadTrackablesFromAsset(trackableAssetName);
+        mainTarget = targetTrackables.get(targetIndex);
+        mainTarget.setName(mainAssetName);
 
-        targetsSkyStoneTrackables.activate();
+        targetTrackables.activate();
     }
 
 
 
     public FieldPlacement find() {
 
-        VectorF trans = null;
         FieldPlacement placement = null;
 
-        OpenGLMatrix pose = ((VuforiaTrackableDefaultListener)stoneTarget.getListener()).getPose();
+        OpenGLMatrix pose = ((VuforiaTrackableDefaultListener)mainTarget.getListener()).getFtcCameraFromTarget();
         telemetry.addData("Pose", format(pose));
         dbugThis("Pose : " + format(pose));
 
         /* We further illustrate how to decompose the pose into useful rotational and
          * translational components */
         if (pose != null) {
-            trans = pose.getTranslation();
+            VectorF translation     = pose.getTranslation();
+            Orientation rot         = Orientation.getOrientation(pose, AxesReference.EXTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
 
             // Extract the X, Y, and Z components of the offset of the target relative to the robot
-            double tX = trans.get(0) / mmPerInch;
-            double tY = trans.get(1) / mmPerInch;
+            double tX = translation.get(0) / mmPerInch;
+            double tY = translation.get(1) / mmPerInch;
 
             placement = new FieldPlacement(tX, tY);
         }
@@ -143,7 +153,7 @@ public class VuMarkIdentification {
 
 
     public void stop() {
-        targetsSkyStoneTrackables.deactivate();
+        targetTrackables.deactivate();
     }
 
 

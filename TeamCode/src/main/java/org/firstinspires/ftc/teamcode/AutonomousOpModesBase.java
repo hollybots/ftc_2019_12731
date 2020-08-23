@@ -14,7 +14,7 @@
  * Neither the name of FIRST nor the names of its contributors may be used to endorse or
  * promote products derived from this software without specific prior written permission.
  *
- * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
+ * NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY"S PATENT RIGHTS ARE GRANTED BY THIS
  * LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
  * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -40,12 +40,15 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -55,6 +58,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.Utils.FieldPlacement;
 import org.firstinspires.ftc.teamcode.Utils.TravelDirection;
 import org.firstinspires.ftc.teamcode.Utils.VuMarkIdentification;
+import org.firstinspires.ftc.teamcode.Utils.TensorFlowObjectIdentification;
+
+import org.firstinspires.ftc.teamcode.Utils.ObjectIdentificationInterface;
 
 
 import java.util.Random;
@@ -71,15 +77,27 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 @Disabled
 public class AutonomousOpModesBase extends LinearOpMode {
 
+
+
     protected static final double CLOSE_ENOUGH_X                = 1.0;
     protected static final double CLOSE_ENOUGH_Y                = 1.0;
+
+//    protected static final String IDENTIFICATION_SYSTEM         = "VUFORIA";
+    protected static final String IDENTIFICATION_SYSTEM         = "TSF";
 
     // Will dump debug information in the LogCat if true
     protected boolean DEBUG                               = false;
 
-    // Will iniatiate VUFORIA
-    protected Boolean USE_VUFORIA                         = true;
+    // Needed for VUFORIA Vumark Identification
     protected String TRACKABLE_ASSET_NAME                 = "Skystone";
+    protected String TRACKABLE_NAME                       = "Sky Stone";  // Can be anyting
+    protected int TRACKABLE_INDEX                         = 0;
+
+
+    // Needed for TENSORFLOW object Identification
+    private static final String TFOD_MODEL_ASSET            = "Skystone.tflite";
+    private static final String [] TFOD_MODEL_ASSETS_LABEL  = {"Stone", "Skystone"};
+    private static final String TFOD_TARGET_LABEL           = "Skystone";
 
     /**
      * FIELD CONSTANT
@@ -174,14 +192,13 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /* Propulsion and basic hardware
      */
-    public BotBase botBase              = null;
-    public BotTop botTop                = null;
+    public BotBase botBase                                      = null;
+    public BotTop botTop                                        = null;
 
 
-
-    /* VuMark detection
+    /* Object detection sub system
      */
-    protected VuMarkIdentification vuMark  = null;
+    protected ObjectIdentificationInterface searchableTarget      = null;
 
     /**
      * HARDWARE classes
@@ -191,31 +208,31 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected BNO055IMU gyro = null;
 
     // Range Sensors
-    ModernRoboticsI2cRangeSensor distanceFront = null;
-    ModernRoboticsI2cRangeSensor distanceBack = null;
-    ModernRoboticsI2cRangeSensor distanceLeft = null;
-    ModernRoboticsI2cRangeSensor distanceRight = null;
+    ModernRoboticsI2cRangeSensor distanceFront                  = null;
+    ModernRoboticsI2cRangeSensor distanceBack                   = null;
+    ModernRoboticsI2cRangeSensor distanceLeft                   = null;
+    ModernRoboticsI2cRangeSensor distanceRight                  = null;
 
     // Color sensors
-    ColorSensor bottomColor                 = null;
+    ColorSensor bottomColor                                     = null;
 
 
     // navigation servo
-    Servo camera_pan_horizontal = null;
-    double cameraPanHorizontalPosition        = 0;
-    int cameraPanHorizontalDirection          = 1; // 1: clockwise -1: counterclockwise
+    Servo camera_pan_horizontal                                 = null;
+    double cameraPanHorizontalPosition                          = 0;
+    int cameraPanHorizontalDirection                            = 1; // 1: clockwise -1: counterclockwise
 
     // navigation servo
     Servo camera_pan_vertical = null;
-    double cameraPanVerticalPosition        = 0;
-    int cameraPanVerticalDirection          = 1; // 1: up -1: down
+    double cameraPanVerticalPosition                            = 0;
+    int cameraPanVerticalDirection                              = 1; // 1: up -1: down
 
 
     // limit switches
-    DigitalChannel backCollision       = null;
+    DigitalChannel backCollision                                = null;
 
     /**
-     * Class valiables for persistence
+     * Class for state management
      */
     // stall probability (0-5 5:stalled)
     int stallProbability                        = 0;
@@ -231,9 +248,19 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected ElapsedTime runtime = new ElapsedTime();
 
 
+
+    /***
+     * Needs to be overriden/implemented in the derived class
+     */
 //    @Override
     public void runOpMode() {}
 
+
+    /**
+     * Inits the the automomous mode
+     * 1) imports the hardware
+     * 2) Initialize the hardware
+     */
     protected void initAutonomous() {
 
         botBase     = new BotBase(hardwareMap);
@@ -241,7 +268,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
         /*********************       GYRO        *********************** */
         // Set up the parameters with which we will use our IMU. Note that integration
-        // algorithm here just reports accelerations to the logcat log; it doesn't actually
+        // algorithm here just reports accelerations to the logcat log; it doesn"t actually
         // provide positional information.
         BNO055IMU.Parameters gyroParameters = new BNO055IMU.Parameters();
         gyroParameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
@@ -260,15 +287,30 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
         /* ************************************
-            VUMARK
+            OBJECT IDENTIFICATION
          */
-        if (USE_VUFORIA) {
-            vuMark  = new VuMarkIdentification(
-                    hardwareMap,
-                    telemetry,
-                    TRACKABLE_ASSET_NAME,
-                    CAMERA_CHOICE,
-                    this.DEBUG
+
+        if (IDENTIFICATION_SYSTEM == "VUFORIA") {
+            searchableTarget  = new VuMarkIdentification(
+                hardwareMap,
+                telemetry,
+                TRACKABLE_ASSET_NAME,
+                TRACKABLE_NAME,
+                TRACKABLE_INDEX,
+                botBase.getWebcam(),
+                this.DEBUG
+            );
+        }
+
+        else if (IDENTIFICATION_SYSTEM == "TSF") {
+            searchableTarget  = new TensorFlowObjectIdentification(
+                hardwareMap,
+                telemetry,
+                TFOD_MODEL_ASSET,
+                TFOD_MODEL_ASSETS_LABEL,
+                TFOD_TARGET_LABEL,
+                botBase.getWebcam(),
+                this.DEBUG
             );
         }
 
@@ -336,12 +378,12 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * This free the resources and objects created for this opmode
+     * This free the resources and objects created for this opmode.  Must be called when exiting the loop
      */
     protected void terminateAutonomous()
     {
-        if (vuMark != null) {
-            vuMark.stop();
+        if (searchableTarget != null) {
+            searchableTarget.stop();
         }
         stopMoving();
     }
@@ -370,7 +412,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * This function stops all propulstion motors simultaneously
+     * This function stops all propulsion motors simultaneously
      */
     protected void stopMoving() {
         botBase.stop();
@@ -401,6 +443,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      * This function moves the robot at the given angle until it reaches the final Destination.
+     * PLEASE NOTE that the heading of the robot does not change.  The robot will be straffing and moving at the
+     * same time.
+     *
      * angleInRadians is ALWAYS the angle between the desired direction and the direction the robot is facing.
      *
      * WARNING ***************  This method MUST be called INSIDE a control loop. ********************
@@ -416,7 +461,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
         double rear_left = power * Math.sin(temp);
         double rear_right = power * Math.cos(temp);
 
-        // normalize the wheel speed so we don't exceed 1
+        // normalize the wheel speed so we don"t exceed 1
         double max = Math.abs(front_left);
         if (Math.abs(front_right)>max) {
             max = Math.abs(front_right);
@@ -537,7 +582,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      * Powers up the propulsion to move Left until it is x inches from an object
-     *
+     * Please NOTE that The Range Sensor combines ultrasonic and optical measuring elements to obtain a reading between
+     * 1cm and 255cm.
+     * ANYTHING outside of that rance cannot be evaluated propaerly with this sensor
      * @param x
      * @param ms
      * @param power
@@ -678,7 +725,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      * Powers up the propulsion to move Right until it is x inches from an object
-     *
+     * Please NOTE that The Range Sensor combines ultrasonic and optical measuring elements to obtain a reading between
+     * 1cm and 255cm.
+     * ANYTHING outside of that rance cannot be evaluated propaerly with this sensor
      * @param x
      * @param ms
      * @param power
@@ -711,6 +760,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      * Powers up the propulsion to move Forward until it is x inches from an object
+     * Please NOTE that The Range Sensor combines ultrasonic and optical measuring elements to obtain a reading between
+     * 1cm and 255cm.
+     * ANYTHING outside of that rance cannot be evaluated propaerly with this sensor
      *
      * @param x
      * @param ms
@@ -743,6 +795,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      * Powers up the propulsion to move Back until it is x inches from an object
+     * Please NOTE that The Range Sensor combines ultrasonic and optical measuring elements to obtain a reading between
+     * 1cm and 255cm.
+     * ANYTHING outside of that rance cannot be evaluated propaerly with this sensor
      *
      * @param x
      * @param ms
@@ -776,21 +831,24 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
     /**
      *  Moves the robot in either 4 direction for ms amount of time OR until oriented whichever comes first
-     *  if the untilOriented flag is set to true.  If untilOriented is set to false, motor will move according
+     *  if the untilObjectInSightFeature flag is set to true.  If untilObjectInSightFeature is set to false, motor will move according
      *  to time limit only.
      *
-     * @param direction             : FORWARD,BACKWARD,LEFT,RIGHT
-     * @param ms                    : Limit of time the motos will be in motion
-     * @param power                 : Motor power
-     * @param untilRealigned         : The robot will move until oriented
+     *
+     * @param direction                         : FORWARD,BACKWARD,LEFT,RIGHT
+     * @param ms                                : Limit of time the motos will be in motion
+     * @param power                             : Motor power
+     * @param untilObjectInSightFeature         : If true, he robot will move until it finds the object
+     *                                          NOTE:  don't use this unless you are absolutely sure that the
+     *                                          object is near
      */
-    private void move(TravelDirection direction, double ms, double power, boolean untilRealigned) {
+    private void move(TravelDirection direction, double ms, double power, boolean untilObjectInSightFeature) {
 
 
         if (power == 0) {
             power = DRIVE_SPEED;
         }
-        boolean bumped = false;
+        boolean hasCollidedWithBack = false;
         powerPropulsion(direction, power);
 
         double limit = runtime.milliseconds() + ms;
@@ -800,13 +858,17 @@ public class AutonomousOpModesBase extends LinearOpMode {
         while (
             opModeIsActive() &&
             (now = runtime.milliseconds()) < limit &&
-            (!untilRealigned || untilRealigned && botCurrentPlacement != null)
+            (!untilObjectInSightFeature || untilObjectInSightFeature && botCurrentPlacement != null)
         ) {
-            if (isCollidingBack() && (direction == TravelDirection.BACKWARD) && !bumped ) {
-                bumped = true;
+            // this logic was put it so when we collide with an object, we keep going for about 1 second at very low speed
+            // just in case we bumped into it and pushed it away
+            if (isCollidingBack() && (direction == TravelDirection.BACKWARD) && !hasCollidedWithBack ) {
+                hasCollidedWithBack = true;
                 powerPropulsion(direction, 0.1);
-                limit = now + 2000;
+                limit = now + 1000;
             }
+
+            // @todo needs to be tested
 //            if ( now > limitToSlowDown && power > 0.4 ) {
 //                powerPropulsion(direction, power / 2.0);
 //            }
@@ -1030,10 +1092,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * Determines the error between the target angle and the robot's current heading
+     * Determines the error between the target angle and the robot"s current heading
      *
      * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
-     * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
+     * @return  error angle: Degrees in the range +/- 180. Centered on the robot"s frame of reference
      *          +ve error means the robot should turn LEFT (CCW) to reduce error.
      *
      */
@@ -1055,10 +1117,10 @@ public class AutonomousOpModesBase extends LinearOpMode {
 
 
     /**
-     * Determines the error between the target angle and the robot's current heading
+     * Determines the error between the target angle and the robot"s current heading
      *
      * @param   targetAngle  Desired angle (relative to global reference established at last Gyro Reset).
-     * @return  error angle: Degrees in the range +/- 180. Centered on the robot's frame of reference
+     * @return  error angle: Degrees in the range +/- 180. Centered on the robot"s frame of reference
      *          +ve error means the robot should turn LEFT (CCW) to reduce error.
      *
      */

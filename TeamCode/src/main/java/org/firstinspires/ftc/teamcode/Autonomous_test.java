@@ -88,8 +88,7 @@ public class Autonomous_test extends AutonomousOpModesBase {
             telemetry.update();
         }
 
-        vuMark.stop();
-        stopMoving();
+        terminateAutonomous();
     }
 
     /**
