@@ -814,6 +814,8 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *  if the untilObjectInSightFeature flag is set to true.  If untilObjectInSightFeature is set to false, motor will move according
      *  to time limit only.
      *
+     *  This is legacy code.  Instead of this we move using the robot's odometer (if it has one)
+     *
      *
      * @param direction                         : FORWARD,BACKWARD,LEFT,RIGHT
      * @param ms                                : Limit of time the motos will be in motion
@@ -822,7 +824,7 @@ public class AutonomousOpModesBase extends LinearOpMode {
      *                                          NOTE:  don't use this unless you are absolutely sure that the
      *                                          object is near
      */
-    private void move(TravelDirection direction, double ms, double power, boolean untilObjectInSightFeature) {
+    private void moveByTime(TravelDirection direction, double ms, double power, boolean untilObjectInSightFeature) {
 
 
         if (power == 0) {
@@ -840,6 +842,82 @@ public class AutonomousOpModesBase extends LinearOpMode {
             (now = runtime.milliseconds()) < limit &&
             (!untilObjectInSightFeature || untilObjectInSightFeature && botCurrentPlacement != null)
         ) {
+            // this logic was put it so when we collide with an object, we keep going for about 1 second at very low speed
+            // just in case we bumped into it and pushed it away
+            if (isCollidingBack() && (direction == TravelDirection.BACKWARD) && !hasCollidedWithBack ) {
+                hasCollidedWithBack = true;
+                powerPropulsion(direction, 0.1);
+                limit = now + 1000;
+            }
+
+            // @todo needs to be tested
+//            if ( now > limitToSlowDown && power > 0.4 ) {
+//                powerPropulsion(direction, power / 2.0);
+//            }
+//            else {
+//                powerPropulsion(direction, power);
+//            }
+
+            autonomousIdleTasks();
+        }
+        stopMoving();
+        return;
+    }
+
+
+    /**
+     *  Moves the robot in either 4 direction until it reaches the given distance.
+     *  If useLimitSwitch is flag is enabled.  We will make sure it is activated for more that 1 second before we stop
+     *
+     *
+     * @param direction                         : FORWARD,BACKWARD,LEFT,RIGHT
+     * @param distance                          : Distance to move
+     * @param power                             : Motor power
+     * @param useCollisionAlerts                : If true, he robot will move until it activates the limit switch for more than 1 second.
+     *                                          NOTE:  don't use this unless you have a functional limit switch
+     */
+    private void move(TravelDirection direction, double distance, double power, boolean useCollisionAlerts) {
+
+
+        if (power == 0) {
+            power = DRIVE_SPEED;
+        }
+        boolean hasCollidedWithBack = false;
+        powerPropulsion(direction, power);
+
+        double limit = 0;
+        double limitToSlowDown = 0;
+        double now;
+
+        switch (direction) {
+            case FORWARD:
+                limit = botBase.odometer.getCurrentYPos() + distance;
+                limitToSlowDown = botBase.odometer.getCurrentYPos() + 0.85 * distance;
+                break;
+            case BACKWARD:
+                limit = botBase.odometer.getCurrentYPos() - distance;
+                limitToSlowDown = botBase.odometer.getCurrentYPos() - 0.85 * distance;
+                break;
+            case LEFT:
+                limit = botBase.odometer.getCurrentXPos() - distance;
+                limitToSlowDown = botBase.odometer.getCurrentXPos() - 0.85 * distance;
+                break;
+            case RIGHT:
+                limit = botBase.odometer.getCurrentXPos() + distance;
+                limitToSlowDown = botBase.odometer.getCurrentXPos() - 0.85 * distance;
+                break;
+        }
+
+        while (
+            opModeIsActive() &&
+            (
+                (direction == TravelDirection.FORWARD && botBase.odometer.getCurrentYPos() < limit) ||
+                (direction == TravelDirection.BACKWARD && botBase.odometer.getCurrentYPos() > limit) ||
+                (direction == TravelDirection.LEFT && botBase.odometer.getCurrentYPos() > limit) ||
+                (direction == TravelDirection.RIGHT && botBase.odometer.getCurrentYPos() < limit)
+            ) && (!untilObjectInSightFeature || untilObjectInSightFeature && botCurrentPlacement != null)
+        ) {
+            now = runtime.milliseconds();
             // this logic was put it so when we collide with an object, we keep going for about 1 second at very low speed
             // just in case we bumped into it and pushed it away
             if (isCollidingBack() && (direction == TravelDirection.BACKWARD) && !hasCollidedWithBack ) {
@@ -1231,6 +1309,9 @@ public class AutonomousOpModesBase extends LinearOpMode {
     protected void autonomousIdleTasks() {
         idle();
         botTop.checkAllLimitSwitches();
+        botBase.odometer.globalCoordinatePositionUpdate();
+        botBase.collisionFront.updateLimitSwitchState();
+        botBase.collisionBack.updateLimitSwitchState();
     }
 
     /**

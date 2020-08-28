@@ -3,11 +3,13 @@ package org.firstinspires.ftc.teamcode;
 import android.util.Log;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Components.BlinkinBling;
+import org.firstinspires.ftc.teamcode.Components.CollisionAlert;
 import org.firstinspires.ftc.teamcode.Components.Odometer;
 
 
@@ -50,6 +52,10 @@ public class BotBase {
     // Odometer
     public Odometer odometer            = null;
 
+    // Collision alerts
+    CollisionAlert collisionFront       = null;
+    CollisionAlert collisionBack        = null;
+
 
     /**
      * initRobot()
@@ -67,6 +73,22 @@ public class BotBase {
         } catch (Exception e) {
             odometer = null;
             Log.d("BOTBASE: ", "Cannot intialize Odometer");
+        }
+
+        /* ***********************************
+            COLLISION SYSTEM
+        */
+        try {
+            collisionFront = new CollisionAlert(hardwareMap, "collision_front");
+        } catch (Exception e) {
+            collisionFront = null;
+            Log.d("BOTBASE: ", "Cannot intialize collisionFront");
+        }
+        try {
+            collisionBack = new CollisionAlert(hardwareMap, "collision_back");
+        } catch (Exception e) {
+            collisionBack = null;
+            Log.d("BOTBASE: ", "Cannot intialize collisionBack");
         }
 
 

@@ -172,13 +172,13 @@ public class Odometer {
      * Returns the robot's global x coordinate
      * @return global x coordinate
      */
-    public double returnXCoordinate(){ return robotGlobalXCoordinatePosition; }
+    public double getCurrentXPos(){ return robotGlobalXCoordinatePosition; }
 
     /**
      * Returns the robot's global y coordinate
      * @return global y coordinate
      */
-    public double returnYCoordinate(){ return robotGlobalYCoordinatePosition; }
+    public double getCurrentYPos(){ return robotGlobalYCoordinatePosition; }
 
     /**
      * Returns the robot's global orientation
@@ -205,7 +205,7 @@ public class Odometer {
         }
     }
 
-    public void reverseNormalEncoder()
+    public void reverseHorizontalEncoder()
     {
         if(normalEncoderPositionMultiplier == 1){
             normalEncoderPositionMultiplier = -1;

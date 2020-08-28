@@ -19,3 +19,11 @@ android {
         targetSdkVersion 28
     }
 }
+
+repositories {
+    maven { url = "https://dl.bintray.com/first-tech-challenge/ftcsdk/" }
+}
+
+dependencies {
+    annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
+}
